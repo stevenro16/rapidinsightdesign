@@ -88,9 +88,11 @@
         {{-- Bottom: collapse toggle --}}
         <div class="border-t border-[var(--color-border)] p-2 space-y-1">
             <button @click="toggleSidebar()"
-                    class="sidebar-link w-full" title="{{ 'Toggle sidebar' }}">
-                <x-icon name="{{ 'chevron-left' }}" class="w-5 h-5 shrink-0 transition-transform duration-300"
-                        :style="sidebarOpen ? '' : 'transform: rotate(180deg)'" />
+                    class="sidebar-link w-full" title="Toggle sidebar">
+                <span :style="sidebarOpen ? '' : 'transform: rotate(180deg)'"
+                      class="inline-flex transition-transform duration-300">
+                    <x-icon name="chevron-left" class="w-5 h-5 shrink-0" />
+                </span>
                 <span x-show="sidebarOpen" x-transition>Collapse</span>
             </button>
             <form method="POST" action="/logout">

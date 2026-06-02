@@ -19,8 +19,8 @@
     <div class="absolute bottom-32 left-1/4 w-40 h-40 rounded-full opacity-6 animate-float"
          style="background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%); animation-duration: 6s; animation-delay: -2s;"></div>
 
-    <div class="wide relative z-10 py-24">
-        <div class="max-w-3xl">
+    <div class="wide relative z-10 py-24 grid lg:grid-cols-2 gap-16 items-center">
+        <div>
             {{-- Eyebrow --}}
             <div class="inline-flex items-center gap-2 badge badge-green mb-6 text-xs py-1.5 px-3 animate-fade-in-up">
                 <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-pulse"></span>
@@ -44,6 +44,43 @@
                     <x-icon name="arrow-right" class="w-4 h-4" />
                 </a>
                 <a href="/contact" class="btn-ghost">Get In Touch</a>
+            </div>
+        </div>
+
+        {{-- Logo visual ─────────────────────────────────────────────────── --}}
+        <div class="hidden lg:flex items-center justify-center animate-fade-in-up delay-400 opacity-0-init">
+            <div class="relative">
+                {{-- Outer glow ring --}}
+                <div class="absolute inset-0 rounded-full animate-glow-pulse"
+                     style="background: radial-gradient(circle, rgba(109,190,46,0.18) 0%, transparent 70%); transform: scale(1.6);"></div>
+                {{-- Mid ring --}}
+                <div class="absolute inset-0 rounded-full border border-primary/20 animate-float"
+                     style="transform: scale(1.35); animation-duration: 5s;"></div>
+                {{-- Inner ring --}}
+                <div class="absolute inset-0 rounded-full border border-primary/10 animate-float"
+                     style="transform: scale(1.15); animation-duration: 7s; animation-delay: -1s;"></div>
+
+                {{-- Logo card --}}
+                <div class="relative w-56 h-56 rounded-2xl flex items-center justify-center animate-float border border-primary/30"
+                     style="background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-2) 100%);
+                            box-shadow: 0 0 40px rgba(109,190,46,0.15), 0 0 80px rgba(109,190,46,0.06), inset 0 1px 0 rgba(109,190,46,0.1);">
+                    <img src="/images/logo.png" alt="RapidInsight Designs"
+                         class="w-40 h-auto drop-shadow-[0_0_12px_rgba(109,190,46,0.4)]">
+                </div>
+
+                {{-- Floating tag chips --}}
+                <div class="absolute -top-3 -right-4 badge badge-green text-xs animate-float"
+                     style="animation-duration: 3.5s; animation-delay: -0.5s;">
+                    Laravel
+                </div>
+                <div class="absolute -bottom-3 -left-4 badge badge-green text-xs animate-float"
+                     style="animation-duration: 4.5s; animation-delay: -1.5s;">
+                    Alpine.js
+                </div>
+                <div class="absolute top-1/2 -right-8 badge badge-muted text-xs animate-float"
+                     style="animation-duration: 5s; animation-delay: -2s;">
+                    Tailwind
+                </div>
             </div>
         </div>
     </div>
