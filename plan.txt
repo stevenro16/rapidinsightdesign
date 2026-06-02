@@ -1,0 +1,20 @@
+
+Pages for the following:
+-Main landing page with our mission statement - "Smart Design, Optimized Workflows build for Efficieya ncy."
+-How we work
+-Purchasing Products and what it means
+-Showcase
+
+Create a login menu that can be used by any of the roles for user accounts (admin, staff, customer). (make sure it can do all the normal features like save email and request password reset via email)
+
+Use Laravel with mysql backend for Production and sqlite for dev side. 
+
+Design:
+Use a sleak modern design with colors that match the logo. Keep it more of a darker them, no white background. 
+Incorporate fluid designs so animations move, mouse overs feel really satisfying and visually appealing.
+
+
+When the user logs in they should be able to match information about their account and go to the ShowRoom, this will be where I have demos that 
+they can select from of other producs I've created and actually use those products. 
+
+Let the admin control some of the design aspects with their login and manage the showcase options.
