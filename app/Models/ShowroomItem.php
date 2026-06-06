@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 class ShowroomItem extends Model
 {
     protected $fillable = [
-        'title', 'description', 'embed_url', 'thumbnail_path',
-        'tech_tags', 'is_active', 'sort_order',
+        'title', 'description', 'embed_url', 'public_url', 'private_url',
+        'thumbnail_path', 'tech_tags', 'is_active', 'sort_order',
     ];
 
     protected $casts = [

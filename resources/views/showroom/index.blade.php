@@ -24,7 +24,7 @@
         {{-- Thumbnail --}}
         <div class="h-36 rounded-lg mb-4 overflow-hidden bg-[var(--color-surface-2)] flex items-center justify-center">
             @if($item->thumbnail_path)
-            <img src="{{ $item->thumbnail_path }}" alt="{{ $item->title }}" class="w-full h-full object-cover">
+            <img src="{{ Storage::url($item->thumbnail_path) }}" alt="{{ $item->title }}" class="w-full h-full object-cover">
             @else
             <x-icon name="computer" class="w-10 h-10 text-[var(--color-border)]" />
             @endif

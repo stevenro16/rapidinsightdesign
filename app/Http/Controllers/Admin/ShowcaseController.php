@@ -7,6 +7,7 @@ use App\Models\ShowroomItem;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ShowcaseController extends Controller
@@ -23,13 +24,20 @@ class ShowcaseController extends Controller
         $data = $request->validate([
             'title'       => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
-            'embed_url'   => ['required', 'url'],
+            'public_url'  => ['nullable', 'url'],
+            'private_url' => ['nullable', 'url'],
             'tech_tags'   => ['nullable', 'string', 'max:200'],
             'sort_order'  => ['nullable', 'integer'],
-            'is_active'   => ['nullable', 'boolean'],
+            'thumbnail'   => ['nullable', 'image', 'max:4096'],
         ]);
 
-        $data['is_active'] = $request->has('is_active');
+        $data['is_active'] = $request->boolean('is_active');
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail_path'] = $request->file('thumbnail')->store('showcase', 'public');
+        }
+
+        unset($data['thumbnail']);
         ShowroomItem::create($data);
 
         return back()->with('success', 'Showcase item added.');
@@ -38,15 +46,31 @@ class ShowcaseController extends Controller
     public function update(Request $request, ShowroomItem $showroomItem): RedirectResponse
     {
         $data = $request->validate([
-            'title'       => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
-            'embed_url'   => ['required', 'url'],
-            'tech_tags'   => ['nullable', 'string', 'max:200'],
-            'sort_order'  => ['nullable', 'integer'],
-            'is_active'   => ['nullable', 'boolean'],
+            'title'           => ['required', 'string', 'max:100'],
+            'description'     => ['nullable', 'string'],
+            'public_url'      => ['nullable', 'url'],
+            'private_url'     => ['nullable', 'url'],
+            'tech_tags'       => ['nullable', 'string', 'max:200'],
+            'sort_order'      => ['nullable', 'integer'],
+            'thumbnail'       => ['nullable', 'image', 'max:4096'],
+            'remove_thumbnail'=> ['nullable', 'boolean'],
         ]);
 
-        $data['is_active'] = $request->has('is_active');
+        $data['is_active'] = $request->boolean('is_active');
+
+        if ($request->hasFile('thumbnail')) {
+            if ($showroomItem->thumbnail_path) {
+                Storage::disk('public')->delete($showroomItem->thumbnail_path);
+            }
+            $data['thumbnail_path'] = $request->file('thumbnail')->store('showcase', 'public');
+        } elseif ($request->boolean('remove_thumbnail')) {
+            if ($showroomItem->thumbnail_path) {
+                Storage::disk('public')->delete($showroomItem->thumbnail_path);
+            }
+            $data['thumbnail_path'] = null;
+        }
+
+        unset($data['thumbnail'], $data['remove_thumbnail']);
         $showroomItem->update($data);
 
         return back()->with('success', 'Showcase item updated.');
@@ -54,6 +78,9 @@ class ShowcaseController extends Controller
 
     public function destroy(ShowroomItem $showroomItem): RedirectResponse
     {
+        if ($showroomItem->thumbnail_path) {
+            Storage::disk('public')->delete($showroomItem->thumbnail_path);
+        }
         $showroomItem->delete();
         return back()->with('success', 'Showcase item deleted.');
     }

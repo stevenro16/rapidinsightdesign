@@ -65,7 +65,7 @@
                      style="background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-2) 100%);
                             box-shadow: 0 0 40px rgba(109,190,46,0.15), 0 0 80px rgba(109,190,46,0.06), inset 0 1px 0 rgba(109,190,46,0.1);">
                     <img src="/images/logo.png" alt="RapidInsight Designs"
-                         class="w-40 h-auto drop-shadow-[0_0_12px_rgba(109,190,46,0.4)]">
+                         class="w-140 h-auto drop-shadow-[0_0_12px_rgba(109,190,46,0.4)]">
                 </div>
 
                 {{-- Floating tag chips --}}

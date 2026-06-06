@@ -31,7 +31,7 @@
     </header>
 
     {{-- Iframe --}}
-    <main class="flex-1 relative" x-data="iframeEmbed('{{ $showroomItem->embed_url }}')">
+    <main class="flex-1 relative" x-data="iframeEmbed('{{ $showroomItem->private_url ?? $showroomItem->embed_url }}')">
         {{-- Loading skeleton --}}
         <div x-show="!loaded" class="absolute inset-0 flex items-center justify-center bg-[var(--color-bg)]">
             <div class="text-center">

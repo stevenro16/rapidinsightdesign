@@ -30,9 +30,9 @@
             ['bolt',     'Deployment & Support',
              'We handle production deployment, monitoring, and ongoing support. Your success doesn\'t end at launch — it starts there.'],
         ] as $i => [$icon, $title, $desc])
-        <div x-data="scrollReveal({{ $i * 100 }})"
+        <div x-data="scrollReveal({{ 300 + $i * 200 }})"
              :class="visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'"
-             class="transition-all duration-600 relative flex gap-6 mb-10">
+             class="transition-all duration-700 relative flex gap-6 mb-10 opacity-0">
             {{-- Step number bubble --}}
             <div class="shrink-0 w-16 h-16 rounded-full flex items-center justify-center border-2 border-[var(--color-primary)] bg-[var(--color-bg)] z-10 shadow-lg shadow-[var(--color-primary-glow)]">
                 <x-icon name="{{ $icon }}" class="w-6 h-6 text-[var(--color-primary)]" />
