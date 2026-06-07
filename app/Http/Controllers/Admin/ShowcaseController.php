@@ -22,13 +22,13 @@ class ShowcaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'title'       => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
-            'public_url'  => ['nullable', 'url'],
-            'private_url' => ['nullable', 'url'],
-            'tech_tags'   => ['nullable', 'string', 'max:200'],
-            'sort_order'  => ['nullable', 'integer'],
-            'thumbnail'   => ['nullable', 'image', 'max:4096'],
+            'title'        => ['required', 'string', 'max:100'],
+            'description'  => ['nullable', 'string'],
+            'private_url'  => ['nullable', 'url'],
+            'tech_tags'    => ['nullable', 'string', 'max:200'],
+            'sort_order'   => ['nullable', 'integer'],
+            'thumbnail'    => ['nullable', 'image', 'max:4096'],
+            'preview_html' => ['nullable', 'file', 'mimes:html,htm', 'max:2048'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -37,7 +37,11 @@ class ShowcaseController extends Controller
             $data['thumbnail_path'] = $request->file('thumbnail')->store('showcase', 'public');
         }
 
-        unset($data['thumbnail']);
+        if ($request->hasFile('preview_html')) {
+            $data['preview_html_path'] = $request->file('preview_html')->store('showcase/previews', 'public');
+        }
+
+        unset($data['thumbnail'], $data['preview_html']);
         ShowroomItem::create($data);
 
         return back()->with('success', 'Showcase item added.');
@@ -46,14 +50,15 @@ class ShowcaseController extends Controller
     public function update(Request $request, ShowroomItem $showroomItem): RedirectResponse
     {
         $data = $request->validate([
-            'title'           => ['required', 'string', 'max:100'],
-            'description'     => ['nullable', 'string'],
-            'public_url'      => ['nullable', 'url'],
-            'private_url'     => ['nullable', 'url'],
-            'tech_tags'       => ['nullable', 'string', 'max:200'],
-            'sort_order'      => ['nullable', 'integer'],
-            'thumbnail'       => ['nullable', 'image', 'max:4096'],
-            'remove_thumbnail'=> ['nullable', 'boolean'],
+            'title'              => ['required', 'string', 'max:100'],
+            'description'        => ['nullable', 'string'],
+            'private_url'        => ['nullable', 'url'],
+            'tech_tags'          => ['nullable', 'string', 'max:200'],
+            'sort_order'         => ['nullable', 'integer'],
+            'thumbnail'          => ['nullable', 'image', 'max:4096'],
+            'remove_thumbnail'   => ['nullable', 'boolean'],
+            'preview_html'       => ['nullable', 'file', 'mimes:html,htm', 'max:2048'],
+            'remove_preview_html'=> ['nullable', 'boolean'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -70,7 +75,19 @@ class ShowcaseController extends Controller
             $data['thumbnail_path'] = null;
         }
 
-        unset($data['thumbnail'], $data['remove_thumbnail']);
+        if ($request->hasFile('preview_html')) {
+            if ($showroomItem->preview_html_path) {
+                Storage::disk('public')->delete($showroomItem->preview_html_path);
+            }
+            $data['preview_html_path'] = $request->file('preview_html')->store('showcase/previews', 'public');
+        } elseif ($request->boolean('remove_preview_html')) {
+            if ($showroomItem->preview_html_path) {
+                Storage::disk('public')->delete($showroomItem->preview_html_path);
+            }
+            $data['preview_html_path'] = null;
+        }
+
+        unset($data['thumbnail'], $data['remove_thumbnail'], $data['preview_html'], $data['remove_preview_html']);
         $showroomItem->update($data);
 
         return back()->with('success', 'Showcase item updated.');
@@ -80,6 +97,9 @@ class ShowcaseController extends Controller
     {
         if ($showroomItem->thumbnail_path) {
             Storage::disk('public')->delete($showroomItem->thumbnail_path);
+        }
+        if ($showroomItem->preview_html_path) {
+            Storage::disk('public')->delete($showroomItem->preview_html_path);
         }
         $showroomItem->delete();
         return back()->with('success', 'Showcase item deleted.');

@@ -32,7 +32,7 @@
         {{-- Cards grid --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($items as $i => $item)
-            <div @click="setItem({{ $item->id }}, {{ json_encode($item->public_url) }}, {{ json_encode($item->title) }})"
+            <div @click="setItem({{ $item->id }}, {{ json_encode($item->preview_html_path ? Storage::url($item->preview_html_path) : null) }}, {{ json_encode($item->title) }})"
                  :class="selected?.id === {{ $item->id }} ? 'ring-2 ring-primary rounded-2xl' : ''"
                  class="cursor-pointer transition-all duration-200">
                 <div x-data="scrollReveal({{ $i * 80 }})"

@@ -81,10 +81,6 @@
                                 <input type="number" name="sort_order" value="{{ old('sort_order', $item->sort_order) }}" class="input" min="0">
                             </div>
                             <div>
-                                <label class="label">Public URL <span class="text-muted font-normal">(shown to all visitors)</span></label>
-                                <input type="url" name="public_url" value="{{ old('public_url', $item->public_url) }}" class="input" placeholder="https://public-demo.example.com">
-                            </div>
-                            <div>
                                 <label class="label">Private URL <span class="text-muted font-normal">(logged-in users only)</span></label>
                                 <input type="url" name="private_url" value="{{ old('private_url', $item->private_url) }}" class="input" placeholder="https://full-demo.example.com">
                             </div>
@@ -112,6 +108,25 @@
                                    :disabled="removing"
                                    class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30 disabled:opacity-40">
                             <p class="text-xs text-muted mt-1">JPG, PNG, GIF, WebP — max 4 MB</p>
+                        </div>
+
+                        {{-- Preview HTML --}}
+                        <div class="mb-3" x-data="{ removing: false }">
+                            <label class="label">Public Preview HTML <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+                            @if($item->preview_html_path)
+                            <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-surface-2 border border-border">
+                                <x-icon name="document" class="w-4 h-4 text-primary shrink-0" />
+                                <span class="text-xs text-muted truncate flex-1">{{ basename($item->preview_html_path) }}</span>
+                                <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted shrink-0">
+                                    <input type="checkbox" name="remove_preview_html" value="1" x-model="removing" class="rounded">
+                                    Remove
+                                </label>
+                            </div>
+                            @endif
+                            <input type="file" name="preview_html" accept=".html,.htm"
+                                   :disabled="removing"
+                                   class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30 disabled:opacity-40">
+                            <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB</p>
                         </div>
 
                         <label class="flex items-center gap-2 mb-3 cursor-pointer">
@@ -169,7 +184,7 @@
                 @if($item->customers->isNotEmpty())
                 <div class="space-y-1.5">
                     @foreach($item->customers as $customer)
-                    <div class="flex items-center justify-between bg-[var(--color-surface-2)] rounded-lg px-3 py-2">
+                    <div class="flex items-center justify-between bg-surface-2 rounded-lg px-3 py-2">
                         <div>
                             <p class="text-sm font-medium text-[var(--color-text)]">{{ $customer->name }}</p>
                             <p class="text-xs text-[var(--color-muted)]">{{ $customer->email }}</p>
@@ -199,10 +214,6 @@
                 <div class="space-y-4">
                     <div><label class="label">Title</label><input type="text" name="title" class="input" required></div>
                     <div>
-                        <label class="label">Public URL <span class="text-muted font-normal">(shown to all visitors)</span></label>
-                        <input type="url" name="public_url" class="input" placeholder="https://public-demo.example.com">
-                    </div>
-                    <div>
                         <label class="label">Private URL <span class="text-muted font-normal">(logged-in users only)</span></label>
                         <input type="url" name="private_url" class="input" placeholder="https://full-demo.example.com">
                     </div>
@@ -216,6 +227,12 @@
                         <input type="file" name="thumbnail" accept="image/*"
                                class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30">
                         <p class="text-xs text-muted mt-1">JPG, PNG, GIF, WebP — max 4 MB</p>
+                    </div>
+                    <div>
+                        <label class="label">Public Preview HTML <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+                        <input type="file" name="preview_html" accept=".html,.htm"
+                               class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30">
+                        <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB</p>
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" checked class="rounded">
