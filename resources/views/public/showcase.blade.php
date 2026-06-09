@@ -25,6 +25,7 @@
             progressInterval: null,
             slideReady: true,
             lightbox: null,
+            paused: false,
 
             setItem(id, slides, title) {
                 if (this.selected?.id === id) { this.close(); return; }
@@ -48,9 +49,10 @@
             startTimer() {
                 clearInterval(this.progressInterval);
                 this.progressPct = 0;
+                this.paused = false;
                 this.progressInterval = setInterval(() => {
-                    if (this.lightbox) return;
-                    this.progressPct += 100 / 80;
+                    if (this.lightbox || this.paused) return;
+                    this.progressPct += 100 / 300;
                     if (this.progressPct >= 100) {
                         this.progressPct = 0;
                         if (this.selected) {
@@ -276,8 +278,9 @@
                             </div>
 
                             {{-- Footer --}}
-                            <div class="flex items-center gap-4 px-6 py-3 border-t border-border bg-surface-2">
-                                <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-3 px-6 py-3 border-t border-border bg-surface-2">
+                                {{-- Dot indicators --}}
+                                <div class="flex items-center gap-1.5 shrink-0">
                                     <template x-for="(slide, i) in selected.slides" :key="i">
                                         <button @click="goTo(i)"
                                                 :class="selected.current === i ? 'w-6 bg-primary' : 'w-2 bg-border hover:bg-muted'"
@@ -285,11 +288,29 @@
                                         </button>
                                     </template>
                                 </div>
+
+                                {{-- Pause / Play button --}}
+                                <button @click="paused = !paused"
+                                        :title="paused ? 'Resume slideshow' : 'Pause slideshow'"
+                                        class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors border"
+                                        :class="paused ? 'border-primary text-primary' : 'border-border text-muted hover:text-text hover:border-muted'">
+                                    <svg x-show="!paused" class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
+                                    </svg>
+                                    <svg x-show="paused" class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </button>
+
+                                {{-- Progress bar --}}
                                 <div class="flex-1 h-0.5 rounded-full overflow-hidden bg-border">
                                     <div :style="`width: ${progressPct}%`"
                                          class="h-full rounded-full bg-primary"
+                                         :class="paused ? 'opacity-40' : ''"
                                          style="transition: width 0.1s linear;"></div>
                                 </div>
+
+                                {{-- Counter + close --}}
                                 <div class="flex items-center gap-4 shrink-0">
                                     <span class="text-xs font-mono text-muted"
                                           x-text="`${String(selected.current+1).padStart(2,'0')} / ${String(selected.slides.length).padStart(2,'0')}`">
