@@ -163,29 +163,21 @@
                  x-transition:leave="transition ease-in duration-350"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-[0.97] translate-y-6"
-                 style="grid-area: 1/1; z-index: 10; align-self: start; overflow: clip;"
-                 class="rounded-2xl border border-primary/20 bg-surface">
+                 style="grid-area: 1/1; z-index: 10; align-self: start;"
+                 class="rounded-2xl overflow-hidden border border-primary/20 bg-surface">
                 <template x-if="selected">
                     <div class="relative">
-                        {{-- Tab bar — sticky so X stays at top-right even when scrolling slide content --}}
-                        <div class="sticky z-20 flex items-center border-b border-border bg-surface-2 rounded-t-2xl" style="top: 4rem;">
-                            <div class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0 px-5 py-3">
-                                <template x-for="(slide, i) in selected.slides" :key="i">
-                                    <button @click="goTo(i)"
-                                            :class="selected.current === i
-                                                ? 'bg-primary text-bg font-semibold shadow-sm'
-                                                : 'text-muted hover:text-text hover:bg-surface'"
-                                            class="shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap">
-                                        <span x-text="`${String(i+1).padStart(2,'0')} ${slide.title}`"></span>
-                                    </button>
-                                </template>
-                            </div>
-                            <button @click="close()"
-                                    title="Close preview"
-                                    class="shrink-0 mr-3 w-7 h-7 rounded-full flex items-center justify-center border border-border transition-all hover:bg-surface hover:border-primary/50 hover:scale-110"
-                                    style="background: var(--color-surface-2);">
-                                <x-icon name="x" class="w-3.5 h-3.5 text-muted" />
-                            </button>
+                        {{-- Tab bar --}}
+                        <div class="flex items-center gap-1.5 overflow-x-auto px-5 py-3 border-b border-border bg-surface-2">
+                            <template x-for="(slide, i) in selected.slides" :key="i">
+                                <button @click="goTo(i)"
+                                        :class="selected.current === i
+                                            ? 'bg-primary text-bg font-semibold shadow-sm'
+                                            : 'text-muted hover:text-text hover:bg-surface'"
+                                        class="shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap">
+                                    <span x-text="`${String(i+1).padStart(2,'0')} ${slide.title}`"></span>
+                                </button>
+                            </template>
                         </div>
 
                         <template x-if="selected.slides.length > 0">
@@ -366,6 +358,21 @@
                     </div>
                 </template>
             </div>
+
+            {{-- X close button — separate grid sibling, never inside overflow:hidden, always top-right --}}
+            <button x-show="selected"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-75"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-75"
+                    @click="close()"
+                    title="Close preview"
+                    style="grid-area: 1/1; justify-self: end; align-self: start; z-index: 30; margin: 0.5rem; background: var(--color-surface-2);"
+                    class="w-8 h-8 rounded-full flex items-center justify-center border border-border transition-all hover:scale-110 hover:border-primary/50">
+                <x-icon name="x" class="w-4 h-4 text-muted" />
+            </button>
 
         </div>{{-- end CSS grid stacking container --}}
 
