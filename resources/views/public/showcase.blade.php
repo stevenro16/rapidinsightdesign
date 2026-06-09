@@ -3,6 +3,8 @@
 
 @section('content')
 <section class="wide py-24">
+
+    @if($items->isEmpty())
     <div class="max-w-2xl mx-auto text-center mb-16">
         <p class="label text-primary mb-2">Live Demos</p>
         <h1 class="text-4xl md:text-5xl font-display font-bold text-text mb-4">
@@ -12,8 +14,6 @@
             A preview of the products and tools we've built. Sign in for full interactive access to your demos.
         </p>
     </div>
-
-    @if($items->isEmpty())
     <div class="text-center py-16">
         <x-icon name="grid" class="w-12 h-12 text-border mx-auto mb-4" />
         <p class="text-muted">Showcase items coming soon.</p>
@@ -81,6 +81,23 @@
             next() { this.goTo((this.selected.current + 1) % this.selected.slides.length); }
         }">
 
+        {{-- Section header — shrinks when a preview is open --}}
+        <div class="max-w-2xl mx-auto text-center transition-all duration-500 ease-in-out"
+             :class="selected ? 'mb-5' : 'mb-16'">
+            <p class="label text-primary transition-all duration-500"
+               :class="selected ? 'mb-0 opacity-50 text-xs' : 'mb-2'">Live Demos</p>
+            <h1 class="font-display font-bold text-text transition-all duration-500 leading-tight"
+                :class="selected ? 'text-2xl md:text-3xl mb-1' : 'text-4xl md:text-5xl mb-4'">
+                The <span class="gradient-text">Showcase</span>
+            </h1>
+            <div class="overflow-hidden transition-all duration-500"
+                 :style="selected ? 'max-height: 0; opacity: 0;' : 'max-height: 6rem; opacity: 1;'">
+                <p class="text-muted leading-relaxed">
+                    A preview of the products and tools we've built. Sign in for full interactive access to your demos.
+                </p>
+            </div>
+        </div>
+
         {{-- CSS Grid stacking container: cards and preview occupy the same grid cell --}}
         {{-- overflow-x:clip hides flying cards without affecting position:fixed children --}}
         <div style="display: grid; overflow-x: clip;">
@@ -100,61 +117,39 @@
                     $outDelay = $i * 55;
                     $inDelay  = 200 + $i * 55;
                 @endphp
-                <div @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }})"
-                     :style="selected
+                <div :style="selected
                          ? 'transform: translateX({{ $flyDir }}); opacity: 0; pointer-events: none; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1) {{ $outDelay }}ms, opacity 0.4s ease {{ $outDelay }}ms;'
-                         : 'transform: none; opacity: 1; transition: transform 0.6s cubic-bezier(0.34,1.2,0.64,1) {{ $inDelay }}ms, opacity 0.4s ease {{ $inDelay }}ms;'"
-                     class="cursor-pointer">
+                         : 'transform: none; opacity: 1; transition: transform 0.6s cubic-bezier(0.34,1.2,0.64,1) {{ $inDelay }}ms, opacity 0.4s ease {{ $inDelay }}ms;'">
                     <div x-data="scrollReveal({{ $i * 80 }})"
                          :class="visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-                         class="transition-all duration-500 card card-hover group relative overflow-hidden flex flex-col h-full">
+                         class="transition-all duration-500 relative rounded-2xl overflow-hidden group h-72 bg-surface-2 cursor-pointer"
+                         @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }})">
 
-                        {{-- Thumbnail --}}
-                        <div class="h-40 rounded-lg mb-4 overflow-hidden bg-surface-2 flex items-center justify-center relative shrink-0">
-                            @if($item->thumbnail_path)
-                            <img src="{{ Storage::url($item->thumbnail_path) }}" alt="{{ $item->title }}" class="w-full h-full object-cover">
-                            @else
-                            <x-icon name="computer" class="w-12 h-12 text-border" />
-                            @endif
-                            @guest
-                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                                <x-icon name="lock" class="w-8 h-8 text-primary" />
-                            </div>
-                            @endguest
-                        </div>
-
-                        <div class="flex-1">
-                            <div class="flex items-start justify-between gap-2 mb-1">
-                                <h3 class="font-display font-semibold text-text">{{ $item->title }}</h3>
-                                @if($item->slides->isNotEmpty())
-                                <span class="badge badge-muted shrink-0 text-xs">{{ $item->slides->count() }} slides</span>
-                                @endif
-                            </div>
-                            @if($item->description)
-                            <p class="text-sm text-muted mb-3 line-clamp-2">{{ $item->description }}</p>
-                            @endif
-                            @if($item->tech_tags)
-                            <div class="flex flex-wrap gap-1 mb-3">
-                                @foreach($item->techTagsArray() as $tag)
-                                <span class="badge badge-muted">{{ trim($tag) }}</span>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
-
-                        @auth
-                        <a href="/showroom/{{ $item->id }}" @click.stop
-                           class="btn-ghost btn-sm w-full justify-center mt-2">
-                            Launch Demo
-                            <x-icon name="external" class="w-4 h-4" />
-                        </a>
+                        {{-- Full-bleed image --}}
+                        @if($item->thumbnail_path)
+                        <img src="{{ Storage::url($item->thumbnail_path) }}" alt="{{ $item->title }}"
+                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                         @else
-                        <button @click.stop="$dispatch('open-login')"
-                                class="btn-ghost btn-sm w-full justify-center mt-2">
-                            <x-icon name="lock" class="w-4 h-4" />
-                            Sign In to Access
-                        </button>
-                        @endauth
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <x-icon name="computer" class="w-16 h-16 text-border" />
+                        </div>
+                        @endif
+
+                        {{-- Gradient overlay --}}
+                        <div class="absolute inset-0 pointer-events-none"
+                             style="background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 45%, transparent 100%);"></div>
+
+                        {{-- Bottom content --}}
+                        <div class="absolute inset-x-0 bottom-0 p-5 z-10">
+                            <h3 class="font-display font-semibold text-white leading-snug mb-1">{{ $item->title }}</h3>
+                            @if($item->description)
+                            <p class="text-sm text-white/65 mb-3 line-clamp-2 leading-snug">{{ $item->description }}</p>
+                            @endif
+                            <button @click.stop="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }})"
+                                    class="btn-primary btn-sm">
+                                + Learn More
+                            </button>
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -168,29 +163,29 @@
                  x-transition:leave="transition ease-in duration-350"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-[0.97] translate-y-6"
-                 style="grid-area: 1/1; z-index: 10; align-self: start;"
-                 class="rounded-2xl overflow-hidden border border-primary/20 bg-surface">
+                 style="grid-area: 1/1; z-index: 10; align-self: start; overflow: clip;"
+                 class="rounded-2xl border border-primary/20 bg-surface">
                 <template x-if="selected">
                     <div class="relative">
-                        {{-- Close button --}}
-                        <button @click="close()"
-                                title="Close preview"
-                                class="absolute top-2 right-2 z-30 w-7 h-7 rounded-full flex items-center justify-center border border-border transition-all hover:bg-surface hover:border-primary/50 hover:scale-110"
-                                style="background: var(--color-surface-2);">
-                            <x-icon name="x" class="w-3.5 h-3.5 text-muted" />
-                        </button>
-
-                        {{-- Tab bar --}}
-                        <div class="flex items-center gap-1.5 overflow-x-auto px-5 py-3 border-b border-border bg-surface-2">
-                            <template x-for="(slide, i) in selected.slides" :key="i">
-                                <button @click="goTo(i)"
-                                        :class="selected.current === i
-                                            ? 'bg-primary text-bg font-semibold shadow-sm'
-                                            : 'text-muted hover:text-text hover:bg-surface'"
-                                        class="shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap">
-                                    <span x-text="`${String(i+1).padStart(2,'0')} ${slide.title}`"></span>
-                                </button>
-                            </template>
+                        {{-- Tab bar — sticky so X stays at top-right even when scrolling slide content --}}
+                        <div class="sticky z-20 flex items-center border-b border-border bg-surface-2 rounded-t-2xl" style="top: 4rem;">
+                            <div class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0 px-5 py-3">
+                                <template x-for="(slide, i) in selected.slides" :key="i">
+                                    <button @click="goTo(i)"
+                                            :class="selected.current === i
+                                                ? 'bg-primary text-bg font-semibold shadow-sm'
+                                                : 'text-muted hover:text-text hover:bg-surface'"
+                                            class="shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap">
+                                        <span x-text="`${String(i+1).padStart(2,'0')} ${slide.title}`"></span>
+                                    </button>
+                                </template>
+                            </div>
+                            <button @click="close()"
+                                    title="Close preview"
+                                    class="shrink-0 mr-3 w-7 h-7 rounded-full flex items-center justify-center border border-border transition-all hover:bg-surface hover:border-primary/50 hover:scale-110"
+                                    style="background: var(--color-surface-2);">
+                                <x-icon name="x" class="w-3.5 h-3.5 text-muted" />
+                            </button>
                         </div>
 
                         <template x-if="selected.slides.length > 0">
