@@ -10,7 +10,7 @@ class ShowcaseController extends Controller
 {
     public function index(): View
     {
-        $items = ShowroomItem::active()->get();
+        $items = ShowroomItem::with('slides')->active()->get();
         return view('public.showcase', compact('items'));
     }
 }

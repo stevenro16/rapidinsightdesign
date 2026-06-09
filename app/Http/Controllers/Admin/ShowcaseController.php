@@ -14,7 +14,7 @@ class ShowcaseController extends Controller
 {
     public function index(): View
     {
-        $items     = ShowroomItem::orderBy('sort_order')->get();
+        $items     = ShowroomItem::with('slides')->orderBy('sort_order')->get();
         $customers = User::where('role', 'customer')->orderBy('name')->get();
         return view('admin.showcase.index', compact('items', 'customers'));
     }

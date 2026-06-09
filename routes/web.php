@@ -64,6 +64,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/showcase/{showroomItem}', [Admin\ShowcaseController::class, 'destroy'])->name('showcase.destroy');
     Route::post('/showcase/{showroomItem}/grant/{user}',  [Admin\ShowcaseController::class, 'grantAccess'])->name('showcase.grant');
     Route::delete('/showcase/{showroomItem}/revoke/{user}', [Admin\ShowcaseController::class, 'revokeAccess'])->name('showcase.revoke');
+    Route::get('/showcase/{showroomItem}/slides',             [Admin\ShowcaseSlideController::class, 'index'])->name('showcase.slides.index');
+    Route::post('/showcase/{showroomItem}/slides',            [Admin\ShowcaseSlideController::class, 'store'])->name('showcase.slides.store');
+    Route::put('/showcase/{showroomItem}/slides/{slide}',     [Admin\ShowcaseSlideController::class, 'update'])->name('showcase.slides.update');
+    Route::delete('/showcase/{showroomItem}/slides/{slide}',  [Admin\ShowcaseSlideController::class, 'destroy'])->name('showcase.slides.destroy');
 
     // Site content
     Route::get('/content',  [Admin\ContentController::class, 'index'])->name('content.index');

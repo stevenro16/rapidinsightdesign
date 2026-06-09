@@ -48,6 +48,11 @@
                         @endif
                     </div>
                     <div class="flex gap-2 shrink-0">
+                        <a href="{{ route('admin.showcase.slides.index', $item) }}"
+                           class="btn-ghost btn-sm gap-1">
+                            <x-icon name="grid" class="w-3.5 h-3.5" />
+                            <span class="text-xs">Slides ({{ $item->slides->count() }})</span>
+                        </a>
                         <button @click="editing = !editing" class="btn-ghost btn-sm">
                             <x-icon name="pencil" class="w-3.5 h-3.5" />
                         </button>
