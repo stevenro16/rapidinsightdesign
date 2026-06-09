@@ -17,9 +17,12 @@
     <header class="fixed top-0 inset-x-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-bg)]/90 backdrop-blur-md">
         <div class="wide flex items-center justify-between h-16">
             {{-- Logo --}}
-            <a href="/" class="flex items-center gap-3 group">
-                <img src="/images/logo.png" alt="RapidInsight Designs" class="h-9 w-auto transition-all duration-300 group-hover:drop-shadow-[0_0_8px_var(--color-primary)]">
-                <span class="hidden sm:block font-display font-semibold text-sm text-[var(--color-text)]">RapidInsight<span class="text-[var(--color-primary)]">.</span></span>
+            <a href="/" class="flex items-center gap-2 group">
+                <img src="/images/logo.png" alt="RapidInsight Designs" class="h-14 w-auto transition-all duration-300 group-hover:drop-shadow-[0_0_8px_var(--color-primary)]" style="max-height: 56px; overflow: visible;">
+                <div class="hidden sm:flex flex-col leading-tight">
+                    <span class="font-display font-bold text-base text-text tracking-tight">RapidInsight</span>
+                    <span class="font-display text-xs text-primary tracking-widest uppercase">Designs</span>
+                </div>
             </a>
 
             {{-- Desktop nav --}}
@@ -99,9 +102,9 @@
     {{-- ── Footer ───────────────────────────────────────────────────────── --}}
     <footer class="border-t border-[var(--color-border)] bg-[var(--color-surface)] mt-24">
         <div class="wide py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-                <img src="/images/logo.png" alt="RapidInsight Designs" class="h-10 w-auto mb-3">
-                <p class="text-sm text-[var(--color-muted)] leading-relaxed">
+            <div class="flex flex-col">
+                <img src="/images/logo.png" alt="RapidInsight Designs" class="w-48 h-auto mb-auto">
+                <p class="text-sm text-[var(--color-muted)] leading-relaxed mt-6">
                     Smart Design, Optimized Workflows built for Efficiency.
                 </p>
             </div>
