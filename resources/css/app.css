@@ -26,6 +26,8 @@
 @layer base {
     html { scroll-behavior: smooth; }
 
+    [x-cloak] { display: none !important; }
+
     body {
         background-color: var(--color-bg);
         color: var(--color-text);
@@ -380,4 +382,77 @@
     }
     .data-table tr:hover td { background-color: var(--color-surface-2); }
     .data-table tr:last-child td { border-bottom: none; }
+
+    /* ── Prospects map ─────────────────────────────────────────────── */
+
+    /* Map pins (Leaflet divIcon) */
+    .prospect-pin {
+        width: 22px;
+        height: 22px;
+        border-radius: 9999px;
+        border: 2px solid var(--color-bg);
+        cursor: pointer;
+        transition: transform 150ms ease;
+    }
+    .prospect-pin:hover { transform: scale(1.25); }
+    .pin-new         { background: #3B82F6; box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+    .pin-shortlisted { background: #FBBF24; box-shadow: 0 0 8px rgba(251,191,36,0.5); }
+    .pin-contacted   { background: #A78BFA; box-shadow: 0 0 8px rgba(167,139,250,0.5); }
+    .pin-ruled_out   { background: #5B6B82; box-shadow: none; opacity: 0.65; }
+    .pin-won         { background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary-glow); }
+    .pin-selected {
+        outline: 2px solid #fff;
+        outline-offset: 1px;
+        animation: glowPulse 2.5s ease-in-out infinite;
+        transform: scale(1.2);
+    }
+
+    /* Status dots (list rows, filter chips, pipeline buttons) */
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+    }
+    .status-dot-new         { background: #3B82F6; }
+    .status-dot-shortlisted { background: #FBBF24; }
+    .status-dot-contacted   { background: #A78BFA; }
+    .status-dot-ruled_out   { background: #5B6B82; }
+    .status-dot-won         { background: var(--color-primary); }
+
+    /* Active pipeline button per status */
+    .pipeline-btn-active { color: var(--color-text); }
+    .pipeline-new         { border-color: rgba(59,130,246,0.5);  background: rgba(59,130,246,0.12); }
+    .pipeline-shortlisted { border-color: rgba(251,191,36,0.5);  background: rgba(251,191,36,0.12); }
+    .pipeline-contacted   { border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.12); }
+    .pipeline-ruled_out   { border-color: rgba(91,107,130,0.6);  background: rgba(91,107,130,0.15); }
+    .pipeline-won         { border-color: rgba(109,190,46,0.5);  background: rgba(109,190,46,0.12); }
+
+    /* Presence score meter */
+    .score-meter {
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--color-surface-2);
+        overflow: hidden;
+    }
+
+    /* Leaflet dark theme overrides */
+    .leaflet-container {
+        background: var(--color-bg);
+        font-family: inherit;
+    }
+    .leaflet-bar a {
+        background: var(--color-surface);
+        color: var(--color-text);
+        border-color: var(--color-border);
+    }
+    .leaflet-bar a:hover {
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+    }
+    .leaflet-control-attribution {
+        background: rgba(13,17,23,0.7) !important;
+        color: var(--color-muted) !important;
+    }
+    .leaflet-control-attribution a { color: var(--color-muted) !important; }
 }

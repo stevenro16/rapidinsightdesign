@@ -72,4 +72,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Site content
     Route::get('/content',  [Admin\ContentController::class, 'index'])->name('content.index');
     Route::post('/content', [Admin\ContentController::class, 'update'])->name('content.update');
+
+    // Prospects (literal paths before {prospect} so they aren't captured by model binding)
+    Route::get('/prospects',                   [Admin\ProspectController::class, 'index'])->name('prospects.index');
+    Route::get('/prospects/data',              [Admin\ProspectController::class, 'data'])->name('prospects.data');
+    Route::get('/prospects/export',            [Admin\ProspectController::class, 'export'])->name('prospects.export');
+    Route::post('/prospects/search',           [Admin\ProspectController::class, 'search'])->name('prospects.search');
+    Route::get('/prospects/{prospect}',        [Admin\ProspectController::class, 'show'])->name('prospects.show');
+    Route::post('/prospects/{prospect}/scan',  [Admin\ProspectController::class, 'scan'])->name('prospects.scan');
+    Route::patch('/prospects/{prospect}',      [Admin\ProspectController::class, 'updateStatus'])->name('prospects.update');
+    Route::post('/prospects/{prospect}/notes', [Admin\ProspectController::class, 'storeNote'])->name('prospects.notes.store');
+    Route::delete('/prospects/{prospect}',     [Admin\ProspectController::class, 'destroy'])->name('prospects.destroy');
 });

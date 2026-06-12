@@ -70,6 +70,10 @@
                 <div class="pt-2 pb-1">
                     <p x-show="sidebarOpen" class="label px-2">Admin</p>
                 </div>
+                <a href="/admin/prospects" class="sidebar-link {{ request()->is('admin/prospects*') ? 'active' : '' }}">
+                    <x-icon name="map-pin" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Prospects</span>
+                </a>
                 <a href="/admin/users" class="sidebar-link {{ request()->is('admin/users*') ? 'active' : '' }}">
                     <x-icon name="cog"  class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Users</span>

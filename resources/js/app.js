@@ -74,5 +74,9 @@ Alpine.data('tabs', (defaultTab) => ({
     isActive(tab) { return this.active === tab; },
 }));
 
+/* ─── Prospects map (admin) — Leaflet lazy-loaded inside init() ─────────── */
+import prospectsMap from './prospectsMap';
+Alpine.data('prospectsMap', prospectsMap);
+
 window.Alpine = Alpine;
 Alpine.start();
