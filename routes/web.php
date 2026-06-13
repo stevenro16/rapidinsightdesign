@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CustomerInvoiceController;
 use App\Http\Controllers\Public;
 use App\Http\Controllers\ShowroomController;
 use App\Http\Controllers\Staff;
@@ -35,11 +36,35 @@ Route::middleware('auth')->prefix('showroom')->group(function () {
     Route::get('/{showroomItem}', [ShowroomController::class, 'show'])->name('showroom.show');
 });
 
+/* ─── Customer billing (signed-in customers view their shared invoices) ──── */
+Route::middleware('auth')->group(function () {
+    Route::get('/billing',                    [CustomerInvoiceController::class, 'index'])->name('billing.index');
+    Route::get('/billing/{invoice}/pdf',      [CustomerInvoiceController::class, 'pdf'])->name('billing.pdf');
+});
+
 /* ─── Staff portal ──────────────────────────────────────────────────────── */
 Route::middleware(['auth', 'role:staff,admin'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/dashboard',          [Staff\DashboardController::class,  'index'])->name('dashboard');
     Route::get('/customers',          [Staff\CustomerController::class,   'index'])->name('customers.index');
     Route::get('/customers/{user}',   [Staff\CustomerController::class,   'show'])->name('customers.show');
+    Route::patch('/customers/{user}',          [Staff\CustomerController::class, 'update'])->name('customers.update');
+    Route::patch('/customers/{user}/password', [Staff\CustomerController::class, 'updatePassword'])->name('customers.password');
+    Route::patch('/customers/{user}/toggle',   [Staff\CustomerController::class, 'toggleActive'])->name('customers.toggle');
+
+    // Customer notes
+    Route::post('/customers/{user}/notes',            [Staff\CustomerNoteController::class, 'store'])->name('customers.notes.store');
+    Route::delete('/customers/{user}/notes/{note}',   [Staff\CustomerNoteController::class, 'destroy'])->name('customers.notes.destroy');
+
+    // Customer files
+    Route::post('/customers/{user}/files',                    [Staff\CustomerFileController::class, 'store'])->name('customers.files.store');
+    Route::get('/customers/{user}/files/{file}/download',     [Staff\CustomerFileController::class, 'download'])->name('customers.files.download');
+    Route::delete('/customers/{user}/files/{file}',           [Staff\CustomerFileController::class, 'destroy'])->name('customers.files.destroy');
+
+    // Customer invoices
+    Route::post('/customers/{user}/invoices',                  [Staff\InvoiceController::class, 'store'])->name('customers.invoices.store');
+    Route::patch('/customers/{user}/invoices/{invoice}',       [Staff\InvoiceController::class, 'update'])->name('customers.invoices.update');
+    Route::delete('/customers/{user}/invoices/{invoice}',      [Staff\InvoiceController::class, 'destroy'])->name('customers.invoices.destroy');
+    Route::get('/customers/{user}/invoices/{invoice}/pdf',     [Staff\InvoiceController::class, 'pdf'])->name('customers.invoices.pdf');
     Route::get('/inquiries',          [Staff\InquiryController::class,    'index'])->name('inquiries.index');
     Route::get('/inquiries/{inquiry}', [Staff\InquiryController::class,   'show'])->name('inquiries.show');
     Route::patch('/inquiries/{inquiry}', [Staff\InquiryController::class, 'update'])->name('inquiries.update');
@@ -59,6 +84,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Showcase management
     Route::get('/showcase',    [Admin\ShowcaseController::class, 'index'])->name('showcase.index');
+    Route::post('/showcase/reorder', [Admin\ShowcaseController::class, 'reorder'])->name('showcase.reorder');
     Route::post('/showcase',   [Admin\ShowcaseController::class, 'store'])->name('showcase.store');
     Route::put('/showcase/{showroomItem}',    [Admin\ShowcaseController::class, 'update'])->name('showcase.update');
     Route::delete('/showcase/{showroomItem}', [Admin\ShowcaseController::class, 'destroy'])->name('showcase.destroy');

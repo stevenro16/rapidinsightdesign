@@ -21,6 +21,24 @@ php artisan tinker --execute="..." # one-off PHP (avoid interactive tinker on Wi
 
 There are no automated tests.
 
+## Deployment (production — GoDaddy)
+
+Production is a GoDaddy shared host. `public_html` is the doc root (not Laravel's `public/`); `public_html/build` and `public_html/storage` are **symlinks** into the repo's `public/build` and `storage/app/public`. Production uses **MySQL** (dev is SQLite). Deploys are git-based: push to `origin/main`, then on the server `git pull` + clear/rebuild caches.
+
+**⚠️ Critical: rebuild assets whenever you add a new CSS class.** `public/build/` (compiled Vite/Tailwind output) **is committed to git** and shipped via `git pull`. Locally `npm run dev` generates Tailwind classes on the fly so dev *always* looks right — but production serves the pre-compiled bundle. If a Blade edit introduces **any** new Tailwind class (a new utility, an arbitrary value like `h-[520px]`, or a new responsive variant like `xl:flex-row`) and you don't run `npm run build` + commit `public/build`, those classes **silently have no effect on production**. (Real incident: the `h-[520px]` class wasn't in the prod CSS, so an absolutely-positioned `<img>` collapsed to zero height and showcase images vanished — dev looked fine the whole time.)
+
+A deploy is "Blade-only, no build" **only** if it reused already-existing classes. If any class name changed: `npm run build` → `git add public/build` → commit → push. The CSS filename is content-hashed, so browser caches bust automatically (no manual cache-busting needed).
+
+**Server post-pull steps:**
+```bash
+git pull origin main
+php artisan migrate --force                    # only if new migrations
+php artisan view:clear && php artisan view:cache  # always, after Blade/asset changes
+php artisan config:cache && php artisan route:cache # only if config or routes changed
+```
+
+The `laravel-deploy-packager` agent runs the push side; tell it explicitly when assets were rebuilt (it otherwise tends to assume "no build needed").
+
 ## Architecture
 
 ### Route Groups
@@ -47,7 +65,8 @@ Single `User` model with `role` column: `admin`, `staff`, `customer`.
 | Model | Table | Notes |
 |---|---|---|
 | `User` | `users` | role enum: `admin/staff/customer`; helpers: `isAdmin()`, `isStaff()`, `isCustomer()`, `isStaffOrAdmin()` |
-| `ShowroomItem` | `showroom_items` | `tech_tags` stored as comma-separated string; use `techTagsArray()` to split; `scopeActive()` scope |
+| `ShowroomItem` | `showroom_items` | `tech_tags` comma-separated string (`techTagsArray()`); `scopeActive()`; `slides()` hasMany. Public-preview columns: `preview_url` + `preview_html_path` (file on `public` disk) + `preview_mode` (`frame`\|`window`). Helpers: `previewUrl()` (URL wins over uploaded file), `previewMode()`, `hasPreview()` |
+| `ShowcaseSlide` | `showcase_slides` | Belongs to `ShowroomItem`; `bullets` cast to array (JSON); `image_path` on `public` disk; ordered by `sort_order` |
 | `CustomerShowroomAccess` | `customer_showroom_access` | Pivot model; `granted_by` FK to users |
 | `Inquiry` | `inquiries` | status: `new/in_progress/resolved`; `statusBadgeClass()` returns CSS class |
 | `SiteContent` | `site_contents` | Key-value CMS; `SiteContent::get($key, $default)` / `SiteContent::set($key, $value)` |
@@ -58,6 +77,16 @@ Single `User` model with `role` column: `admin`, `staff`, `customer`.
 - Customers see only items in `customer_showroom_access` pivot
 - Grant/revoke via admin `/admin/showcase` → Customer Access tab
 - `ShowroomController::show()` enforces access check for customers
+
+### Public Showcase Preview (`resources/views/public/showcase.blade.php`)
+
+Clicking a card opens a preview. The whole panel is a single Alpine `x-data` component; behavior is driven per-item by `previewJson` (built from the model's `previewUrl()`/`previewMode()`):
+
+- **Has preview + `frame` mode** → fixed, centered overlay at **90vw** with a sandboxed `<iframe>` (skeleton loader, "Open in new tab" + Close, click-outside/Esc to close). Note: external sites that send `X-Frame-Options`/CSP `frame-ancestors` refuse to embed — those need `window` mode.
+- **Has preview + `window` mode** → opens the URL in a new tab on click (card button reads "↗ Live Preview").
+- **No preview** → falls back to the image **slideshow** panel (built from `$item->slides`): auto-advancing tabs, lightbox with left/right arrow + keyboard cycling, dots/progress footer. The slideshow panel also breaks out to **90vw** (via `margin-left: calc(50% - 45vw)`; `overflow-x: clip` lives on the inner cards grid so the wide panel isn't clipped). On `xl`+ the slide image (`h-[520px]`, fixed) and text sit **side-by-side** (`xl:flex-row xl:items-center`), stacked below `xl`.
+
+Admin manages the preview source + mode and the slides under `/admin/showcase` (`ShowcaseController`, `ShowcaseSlideController`).
 
 ### Database
 
@@ -73,7 +102,7 @@ DB_PASSWORD=...
 
 ### File Storage
 
-`FILESYSTEM_DISK=local` by default. For ShowroomItem thumbnails, use `Storage::disk('public')` and run `php artisan storage:link`.
+`FILESYSTEM_DISK=local` by default. Uploads (ShowroomItem thumbnails `showcase/`, preview HTML `showcase/previews/`, slide images `showcase/slides/`) are stored on the **`public`** disk via `->store(..., 'public')` and served at `/storage/...` — run `php artisan storage:link` (prod uses the `public_html/storage` symlink). Uploaded files live in `storage/app/public`, which is **gitignored** — they are NOT carried by git-pull deploys, so files uploaded only in dev won't exist in prod (and vice-versa). Views render URLs with `Storage::url($path)`.
 
 ### Views
 
@@ -86,7 +115,7 @@ resources/views/
   auth/                 # login, forgot-password, reset-password
   showroom/             # index (grid), show (full-screen iframe)
   staff/                # dashboard, customers/{index,show}, inquiries/{index,show}
-  admin/                # dashboard, users/{index,create,edit}, showcase/index, content/index
+  admin/                # dashboard, users/{index,create,edit}, showcase/{index,slides}, content/index
   components/
     icon.blade.php      # Heroicons wrapper — <x-icon name="..." class="..." />
 ```
@@ -131,7 +160,7 @@ Brand colors defined as CSS custom properties in `resources/css/app.css` under `
 
 **Staff** (`app/Http/Controllers/Staff/`): `DashboardController`, `CustomerController`, `InquiryController`
 
-**Admin** (`app/Http/Controllers/Admin/`): `DashboardController`, `UserController`, `ShowcaseController`, `ContentController`
+**Admin** (`app/Http/Controllers/Admin/`): `DashboardController`, `UserController`, `ShowcaseController`, `ShowcaseSlideController`, `ContentController`
 
 ### Key Files
 

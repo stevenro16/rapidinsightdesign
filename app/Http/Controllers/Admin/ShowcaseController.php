@@ -14,7 +14,7 @@ class ShowcaseController extends Controller
 {
     public function index(): View
     {
-        $items     = ShowroomItem::with('slides')->orderBy('sort_order')->get();
+        $items     = ShowroomItem::with(['slides', 'customers'])->orderBy('sort_order')->get();
         $customers = User::where('role', 'customer')->orderBy('name')->get();
         return view('admin.showcase.index', compact('items', 'customers'));
     }
@@ -110,6 +110,24 @@ class ShowcaseController extends Controller
         }
         $showroomItem->delete();
         return back()->with('success', 'Showcase item deleted.');
+    }
+
+    /**
+     * Persist a new sort order for showcase items (drag-and-drop reorder).
+     * Expects { order: [id, id, ...] } — sort_order becomes the array index.
+     */
+    public function reorder(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'order'   => ['required', 'array'],
+            'order.*' => ['integer', 'exists:showroom_items,id'],
+        ]);
+
+        foreach ($data['order'] as $index => $id) {
+            ShowroomItem::where('id', $id)->update(['sort_order' => $index]);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     public function grantAccess(Request $request, ShowroomItem $showroomItem, User $user): RedirectResponse

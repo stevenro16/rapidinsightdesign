@@ -156,7 +156,7 @@
                          : 'transform: none; opacity: 1; transition: transform 0.6s cubic-bezier(0.34,1.2,0.64,1) {{ $inDelay }}ms, opacity 0.4s ease {{ $inDelay }}ms;'">
                     <div x-data="scrollReveal({{ $i * 80 }})"
                          :class="visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-                         class="transition-all duration-500 relative rounded-2xl overflow-hidden group h-72 bg-surface-2 cursor-pointer"
+                         class="transition-all duration-500 relative rounded-2xl overflow-hidden group h-[346px] bg-surface-2 cursor-pointer"
                          @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})">
 
                         {{-- Full-bleed image --}}
@@ -169,9 +169,9 @@
                         </div>
                         @endif
 
-                        {{-- Gradient overlay --}}
+                        {{-- Gradient overlay — lighter so the image shows through the bottom banner --}}
                         <div class="absolute inset-0 pointer-events-none"
-                             style="background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 45%, transparent 100%);"></div>
+                             style="background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, transparent 100%);"></div>
 
                         {{-- Bottom content --}}
                         <div class="absolute inset-x-0 bottom-0 p-5 z-10">

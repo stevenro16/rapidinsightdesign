@@ -74,6 +74,38 @@ Alpine.data('tabs', (defaultTab) => ({
     isActive(tab) { return this.active === tab; },
 }));
 
+/* ─── Sortable grid (admin drag-and-drop reorder) ───────────────────────── */
+import Sortable from 'sortablejs';
+Alpine.data('sortable', (reorderUrl) => ({
+    saving: false,
+
+    init() {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+        Sortable.create(this.$el, {
+            handle: '.drag-handle',
+            draggable: '[data-sortable-item]',
+            animation: 180,
+            ghostClass: 'opacity-40',
+            onEnd: () => {
+                const order = [...this.$el.querySelectorAll('[data-sortable-item]')]
+                    .map((el) => el.dataset.id);
+                this.saving = true;
+                fetch(reorderUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ order }),
+                })
+                    .catch(() => {})
+                    .finally(() => { this.saving = false; });
+            },
+        });
+    },
+}));
+
 /* ─── Prospects map (admin) — Leaflet lazy-loaded inside init() ─────────── */
 import prospectsMap from './prospectsMap';
 Alpine.data('prospectsMap', prospectsMap);

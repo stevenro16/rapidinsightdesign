@@ -16,6 +16,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'role', 'company', 'notes',
+        'phone', 'is_active', 'last_login_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -24,7 +25,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'last_login_at'     => 'datetime',
+            'is_active'         => 'boolean',
+            'password'          => 'hashed',
         ];
     }
 
@@ -44,5 +47,20 @@ class User extends Authenticatable
     public function inquiries(): HasMany
     {
         return $this->hasMany(Inquiry::class);
+    }
+
+    public function customerNotes(): HasMany
+    {
+        return $this->hasMany(CustomerNote::class)->latest();
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(CustomerFile::class)->latest();
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->latest('issued_at');
     }
 }

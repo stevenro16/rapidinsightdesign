@@ -23,7 +23,15 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            if (! Auth::user()->is_active) {
+                Auth::logout();
+                return back()
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'This account has been deactivated. Please contact us for assistance.']);
+            }
+
             $request->session()->regenerate();
+            Auth::user()->forceFill(['last_login_at' => now()])->saveQuietly();
 
             return match(Auth::user()->role) {
                 'admin' => redirect()->intended('/admin/dashboard'),

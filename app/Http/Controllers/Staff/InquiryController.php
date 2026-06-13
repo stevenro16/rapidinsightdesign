@@ -10,10 +10,19 @@ use Illuminate\View\View;
 
 class InquiryController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $inquiries = Inquiry::with('user')->latest()->paginate(20);
-        return view('staff.inquiries.index', compact('inquiries'));
+        // "active" = not yet resolved (new/in_progress); "inactive" = resolved/closed
+        $filter = $request->query('filter') === 'inactive' ? 'inactive' : 'active';
+
+        $inquiries = Inquiry::with('user')
+            ->when($filter === 'active', fn ($q) => $q->where('status', '!=', 'resolved'))
+            ->when($filter === 'inactive', fn ($q) => $q->where('status', 'resolved'))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('staff.inquiries.index', compact('inquiries', 'filter'));
     }
 
     public function show(Inquiry $inquiry): View

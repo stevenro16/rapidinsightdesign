@@ -44,6 +44,10 @@
                     <x-icon name="grid"  class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>ShowRoom</span>
                 </a>
+                <a href="/billing" class="sidebar-link {{ request()->is('billing*') ? 'active' : '' }}">
+                    <x-icon name="document" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Billing</span>
+                </a>
             @endif
 
             @if(auth()->user()->isStaffOrAdmin())
