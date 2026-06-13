@@ -29,15 +29,20 @@ Production is a GoDaddy shared host. `public_html` is the doc root (not Laravel'
 
 A deploy is "Blade-only, no build" **only** if it reused already-existing classes. If any class name changed: `npm run build` → `git add public/build` → commit → push. The CSS filename is content-hashed, so browser caches bust automatically (no manual cache-busting needed).
 
+**⚠️ Critical: clear the ROUTE cache whenever you add/rename/remove a route.** Production runs `php artisan route:cache`, so it serves a cached route table. If a deploy adds a route (e.g. a new `route()` name referenced in a Blade view) and you don't rebuild the route cache, the page throws `RouteNotFoundException: Route [x] not defined` even though the route exists in `routes/web.php`. (Real incident: `admin.showcase.reorder` + the `billing.*` routes 500'd on prod until `route:clear`/`route:cache` was run.) Same applies to the config cache when `.env`/config changes.
+
 **Server post-pull steps:**
 ```bash
 git pull origin main
-php artisan migrate --force                    # only if new migrations
-php artisan view:clear && php artisan view:cache  # always, after Blade/asset changes
-php artisan config:cache && php artisan route:cache # only if config or routes changed
+php artisan migrate --force      # only if new migrations
+php artisan optimize:clear       # safest: clears view+route+config+cache in one shot
+php artisan view:cache
+php artisan route:cache           # rebuild route cache — REQUIRED if routes changed
+php artisan config:cache
 ```
+When unsure which caches are stale, `php artisan optimize:clear` after the pull is always safe (it just drops all caches; Laravel rebuilds per-request until you re-cache).
 
-The `laravel-deploy-packager` agent runs the push side; tell it explicitly when assets were rebuilt (it otherwise tends to assume "no build needed").
+The `laravel-deploy-packager` agent runs the push side; tell it explicitly when assets were rebuilt (it assumes "no build needed" otherwise) **and when routes changed** (so it includes `route:clear`/`route:cache` in the server steps).
 
 ## Architecture
 

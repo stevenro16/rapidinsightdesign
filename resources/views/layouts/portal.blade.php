@@ -64,9 +64,17 @@
                     <x-icon name="users" class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Customers</span>
                 </a>
-                <a href="/staff/inquiries" class="sidebar-link {{ request()->is('staff/inquiries*') ? 'active' : '' }}">
+                <a href="/staff/inquiries" class="sidebar-link relative {{ request()->is('staff/inquiries*') ? 'active' : '' }}">
                     <x-icon name="inbox" class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Inquiries</span>
+                    @if($newInquiriesCount > 0)
+                        {{-- expanded: count pill after the label --}}
+                        <span x-show="sidebarOpen" x-transition
+                              class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $newInquiriesCount }}</span>
+                        {{-- collapsed: badge on the icon corner --}}
+                        <span x-show="!sidebarOpen"
+                              class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $newInquiriesCount }}</span>
+                    @endif
                 </a>
             @endif
 
