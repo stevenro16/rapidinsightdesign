@@ -217,9 +217,9 @@
                         <template x-if="selected.slides.length > 0">
                             <div>
                                 {{-- Image + text — stacked by default, side-by-side on wide (2K+) screens --}}
-                                <div class="flex flex-col xl:flex-row xl:items-stretch xl:min-h-[520px]">
-                                {{-- Preview image --}}
-                                <div class="relative overflow-hidden bg-surface-2 h-[520px] xl:h-auto xl:w-[58%] xl:shrink-0">
+                                <div class="flex flex-col xl:flex-row xl:items-center">
+                                {{-- Preview image (fixed height so the absolutely-positioned img always renders) --}}
+                                <div class="relative overflow-hidden bg-surface-2 h-[520px] xl:w-[58%] xl:shrink-0">
 
                                     <button @click="prev()"
                                             x-show="selected.slides.length > 1"
