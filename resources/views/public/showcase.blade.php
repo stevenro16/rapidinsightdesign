@@ -129,11 +129,12 @@
         </div>
 
         {{-- CSS Grid stacking container: cards and preview occupy the same grid cell --}}
-        {{-- overflow-x:clip hides flying cards without affecting position:fixed children --}}
-        <div style="display: grid; overflow-x: clip;">
+        {{-- Clip lives on the cards grid (below) so the wide preview panel can break out --}}
+        <div style="display: grid;">
 
             {{-- ── Cards grid (grid-area 1/1 — defines row height) ──────────────── --}}
-            <div style="grid-area: 1/1;" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {{-- overflow-x:clip hides flying cards without clipping the breakout panel --}}
+            <div style="grid-area: 1/1; overflow-x: clip;" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($items as $i => $item)
                 @php
                     $slidesJson = $item->slides->map(fn($s) => [
@@ -196,7 +197,7 @@
                  x-transition:leave="transition ease-in duration-350"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-[0.97] translate-y-6"
-                 style="grid-area: 1/1; z-index: 10; align-self: start;"
+                 style="grid-area: 1/1; z-index: 10; align-self: start; width: 90vw; margin-left: calc(50% - 45vw);"
                  class="rounded-2xl overflow-hidden border border-primary/20 bg-surface">
                 <template x-if="selected && !selected.preview">
                     <div class="relative">
@@ -215,8 +216,10 @@
 
                         <template x-if="selected.slides.length > 0">
                             <div>
-                                {{-- Full-width image --}}
-                                <div class="relative overflow-hidden bg-surface-2" style="height: 520px;">
+                                {{-- Image + text — stacked by default, side-by-side on wide (2K+) screens --}}
+                                <div class="flex flex-col xl:flex-row xl:items-stretch xl:min-h-[520px]">
+                                {{-- Preview image --}}
+                                <div class="relative overflow-hidden bg-surface-2 h-[520px] xl:h-auto xl:w-[58%] xl:shrink-0">
 
                                     <button @click="prev()"
                                             x-show="selected.slides.length > 1"
@@ -252,7 +255,7 @@
                                 </div>
 
                                 {{-- Text content --}}
-                                <div class="px-8 md:px-16 pb-10 pt-2 max-w-4xl mx-auto">
+                                <div class="px-8 md:px-16 xl:px-12 pb-10 pt-6 xl:pt-8 max-w-4xl mx-auto xl:max-w-none xl:flex-1 xl:flex xl:flex-col xl:justify-center">
 
                                     <div x-show="slideReady"
                                          x-transition:enter="transition ease-out duration-500"
@@ -306,6 +309,7 @@
                                         </div>
                                     </template>
                                 </div>
+                                </div>{{-- end image+text row --}}
 
                                 {{-- Footer --}}
                                 <div class="flex items-center gap-3 px-6 py-3 border-t border-border bg-surface-2">
@@ -428,7 +432,7 @@
                     x-transition:leave-end="opacity-0 scale-75"
                     @click="close()"
                     title="Close preview"
-                    style="grid-area: 1/1; justify-self: end; align-self: start; z-index: 30; margin: 0.5rem; background: var(--color-surface-2);"
+                    style="grid-area: 1/1; justify-self: end; align-self: start; z-index: 30; margin-top: 0.5rem; margin-right: calc(50% - 45vw + 0.5rem); background: var(--color-surface-2);"
                     class="w-8 h-8 rounded-full flex items-center justify-center border border-border transition-all hover:scale-110 hover:border-primary/50">
                 <x-icon name="x" class="w-4 h-4 text-muted" />
             </button>
@@ -453,7 +457,7 @@
                      x-transition:enter-start="opacity-0 scale-95"
                      x-transition:enter-end="opacity-100 scale-100"
                      class="relative rounded-2xl overflow-hidden border border-primary/20 bg-surface shadow-2xl flex flex-col"
-                     style="width: 80vw; height: 88vh;">
+                     style="width: 90vw; height: 88vh;">
                     {{-- Header --}}
                     <div class="flex items-center gap-3 px-5 py-3 border-b border-border bg-surface-2 shrink-0">
                         <span class="font-display font-semibold text-text truncate" x-text="selected.title"></span>
