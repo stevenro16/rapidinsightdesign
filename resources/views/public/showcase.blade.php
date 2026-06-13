@@ -378,19 +378,6 @@
 
     </div>
     @endif
-
-    @guest
-    <div class="mt-16 text-center card border-dashed border-primary/30 max-w-lg mx-auto">
-        <x-icon name="lock" class="w-10 h-10 text-primary mx-auto mb-3" />
-        <h3 class="font-display font-semibold text-text mb-2">Full Access Available</h3>
-        <p class="text-sm text-muted mb-4">
-            Customers can log in to launch and interact with live demo applications.
-        </p>
-        <button x-data @click="$dispatch('open-login')" class="btn-primary">
-            Sign In for Full Access
-        </button>
-    </div>
-    @endguest
 </section>
 
 @push('scripts')
