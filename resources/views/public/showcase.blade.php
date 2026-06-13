@@ -88,7 +88,27 @@
                 this.startTimer();
             },
             prev() { this.goTo((this.selected.current - 1 + this.selected.slides.length) % this.selected.slides.length); },
-            next() { this.goTo((this.selected.current + 1) % this.selected.slides.length); }
+            next() { this.goTo((this.selected.current + 1) % this.selected.slides.length); },
+
+            // ── Lightbox image cycling (only slides that actually have an image) ──
+            lightboxIndexes() {
+                if (!this.selected) return [];
+                return this.selected.slides
+                    .map((s, i) => (s.image ? i : null))
+                    .filter(i => i !== null);
+            },
+            openLightbox() {
+                const img = this.selected.slides[this.selected.current]?.image;
+                if (img) this.lightbox = img;
+            },
+            lightboxStep(dir) {
+                const idxs = this.lightboxIndexes();
+                if (idxs.length < 2) return;
+                const pos = idxs.indexOf(this.selected.current);
+                const next = idxs[(pos + dir + idxs.length) % idxs.length];
+                this.selected.current = next;
+                this.lightbox = this.selected.slides[next].image;
+            }
         }">
 
         {{-- Section header — shrinks when a preview is open --}}
@@ -348,8 +368,19 @@
                              x-transition:leave-end="opacity-0"
                              @click.self="lightbox = null"
                              @keydown.escape.window="lightbox = null"
+                             @keydown.arrow-left.window="if (lightbox) lightboxStep(-1)"
+                             @keydown.arrow-right.window="if (lightbox) lightboxStep(1)"
                              class="fixed inset-0 z-50 flex items-center justify-center p-6"
                              style="background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);">
+
+                            {{-- Prev arrow --}}
+                            <button x-show="lightbox && lightboxIndexes().length > 1"
+                                    @click.stop="lightboxStep(-1)"
+                                    class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                                    style="background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);">
+                                <x-icon name="chevron-left" class="w-6 h-6 text-white" />
+                            </button>
+
                             <div x-show="lightbox"
                                  x-transition:enter="transition ease-out duration-300"
                                  x-transition:enter-start="opacity-0 scale-95"
@@ -366,7 +397,22 @@
                                         style="background: var(--color-surface-2);">
                                     <x-icon name="x" class="w-4 h-4 text-muted" />
                                 </button>
+
+                                {{-- Counter --}}
+                                <div x-show="lightboxIndexes().length > 1"
+                                     class="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-mono text-white"
+                                     style="background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);"
+                                     x-text="`${lightboxIndexes().indexOf(selected.current) + 1} / ${lightboxIndexes().length}`">
+                                </div>
                             </div>
+
+                            {{-- Next arrow --}}
+                            <button x-show="lightbox && lightboxIndexes().length > 1"
+                                    @click.stop="lightboxStep(1)"
+                                    class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                                    style="background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);">
+                                <x-icon name="chevron-right" class="w-6 h-6 text-white" />
+                            </button>
                         </div>
                     </div>
                 </template>
