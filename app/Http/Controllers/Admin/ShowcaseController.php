@@ -25,11 +25,15 @@ class ShowcaseController extends Controller
             'title'        => ['required', 'string', 'max:100'],
             'description'  => ['nullable', 'string'],
             'private_url'  => ['nullable', 'url'],
+            'preview_url'  => ['nullable', 'url'],
+            'preview_mode' => ['nullable', 'in:frame,window'],
             'tech_tags'    => ['nullable', 'string', 'max:200'],
             'sort_order'   => ['nullable', 'integer'],
             'thumbnail'    => ['nullable', 'image', 'max:4096'],
             'preview_html' => ['nullable', 'file', 'mimes:html,htm', 'max:2048'],
         ]);
+
+        $data['preview_mode'] = $data['preview_mode'] ?? 'frame';
 
         $data['is_active'] = $request->boolean('is_active');
 
@@ -53,6 +57,8 @@ class ShowcaseController extends Controller
             'title'              => ['required', 'string', 'max:100'],
             'description'        => ['nullable', 'string'],
             'private_url'        => ['nullable', 'url'],
+            'preview_url'        => ['nullable', 'url'],
+            'preview_mode'       => ['nullable', 'in:frame,window'],
             'tech_tags'          => ['nullable', 'string', 'max:200'],
             'sort_order'         => ['nullable', 'integer'],
             'thumbnail'          => ['nullable', 'image', 'max:4096'],
@@ -62,6 +68,7 @@ class ShowcaseController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+        $data['preview_mode'] = $data['preview_mode'] ?? 'frame';
 
         if ($request->hasFile('thumbnail')) {
             if ($showroomItem->thumbnail_path) {

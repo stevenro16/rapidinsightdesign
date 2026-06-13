@@ -27,12 +27,22 @@
             lightbox: null,
             paused: false,
 
-            setItem(id, slides, title) {
+            setItem(id, slides, title, preview) {
                 if (this.selected?.id === id) { this.close(); return; }
+
+                // Window mode: open the preview in a new tab and leave the page as-is.
+                if (preview && preview.mode === 'window' && preview.url) {
+                    window.open(preview.url, '_blank', 'noopener');
+                    return;
+                }
+
                 this.slideReady = false;
                 this.paused = false;
-                this.selected = { id, slides, title, current: 0 };
-                this.startTimer();
+                this.selected = { id, slides, title, current: 0, preview: preview || null };
+                // Only the image slideshow auto-advances; an embedded preview frame does not.
+                if (!this.selected.preview) {
+                    this.startTimer();
+                }
                 this.$nextTick(() => {
                     requestAnimationFrame(() => { this.slideReady = true; });
                 });
@@ -113,6 +123,9 @@
                         'bullets'     => $s->bullets ?? [],
                         'image'       => $s->image_path ? Storage::url($s->image_path) : null,
                     ])->values();
+                    $previewJson = $item->hasPreview()
+                        ? ['url' => $item->previewUrl(), 'mode' => $item->previewMode()]
+                        : null;
                     $flyDir   = $i % 2 === 0 ? '-120vw' : '120vw';
                     $outDelay = $i * 55;
                     $inDelay  = 200 + $i * 55;
@@ -123,7 +136,7 @@
                     <div x-data="scrollReveal({{ $i * 80 }})"
                          :class="visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
                          class="transition-all duration-500 relative rounded-2xl overflow-hidden group h-72 bg-surface-2 cursor-pointer"
-                         @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }})">
+                         @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})">
 
                         {{-- Full-bleed image --}}
                         @if($item->thumbnail_path)
@@ -145,9 +158,9 @@
                             @if($item->description)
                             <p class="text-sm text-white/65 mb-3 line-clamp-2 leading-snug">{{ $item->description }}</p>
                             @endif
-                            <button @click.stop="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }})"
+                            <button @click.stop="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})"
                                     class="btn-primary btn-sm">
-                                + Learn More
+                                {{ $item->hasPreview() && $item->previewMode() === 'window' ? '↗ Live Preview' : '+ Learn More' }}
                             </button>
                         </div>
                     </div>
@@ -156,7 +169,7 @@
             </div>
 
             {{-- ── Slideshow panel (grid-area 1/1 — overlays card area) ──────────── --}}
-            <div x-show="selected"
+            <div x-show="selected && !selected.preview"
                  x-transition:enter="transition ease-out duration-500"
                  x-transition:enter-start="opacity-0 scale-[0.97] translate-y-6"
                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -165,7 +178,7 @@
                  x-transition:leave-end="opacity-0 scale-[0.97] translate-y-6"
                  style="grid-area: 1/1; z-index: 10; align-self: start;"
                  class="rounded-2xl overflow-hidden border border-primary/20 bg-surface">
-                <template x-if="selected">
+                <template x-if="selected && !selected.preview">
                     <div class="relative">
                         {{-- Tab bar --}}
                         <div class="flex items-center gap-1.5 overflow-x-auto px-5 py-3 border-b border-border bg-surface-2">
@@ -360,7 +373,7 @@
             </div>
 
             {{-- X close button — separate grid sibling, never inside overflow:hidden, always top-right --}}
-            <button x-show="selected && !lightbox"
+            <button x-show="selected && !selected.preview && !lightbox"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-75"
                     x-transition:enter-end="opacity-100 scale-100"
@@ -375,6 +388,52 @@
             </button>
 
         </div>{{-- end CSS grid stacking container --}}
+
+        {{-- ── Frame preview overlay — fixed, centered, 80% of screen width ──────── --}}
+        <div x-show="selected && selected.preview"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click.self="close()"
+             @keydown.escape.window="if (selected?.preview && !lightbox) close()"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+             style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+            <template x-if="selected && selected.preview">
+                <div x-data="{ loaded: false }"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     class="relative rounded-2xl overflow-hidden border border-primary/20 bg-surface shadow-2xl flex flex-col"
+                     style="width: 80vw; height: 88vh;">
+                    {{-- Header --}}
+                    <div class="flex items-center gap-3 px-5 py-3 border-b border-border bg-surface-2 shrink-0">
+                        <span class="font-display font-semibold text-text truncate" x-text="selected.title"></span>
+                        <div class="flex-1"></div>
+                        <a :href="selected.preview.url" target="_blank" rel="noopener"
+                           class="btn-ghost btn-sm gap-1.5 shrink-0">
+                            <x-icon name="external" class="w-3.5 h-3.5" />
+                            <span class="hidden sm:inline">Open in new tab</span>
+                        </a>
+                        <button @click="close()" class="btn-ghost btn-sm gap-1.5 shrink-0">
+                            <x-icon name="x" class="w-3.5 h-3.5" />
+                            Close
+                        </button>
+                    </div>
+                    {{-- Iframe --}}
+                    <div class="relative flex-1 bg-surface-2">
+                        <div x-show="!loaded" class="absolute inset-0 skeleton"></div>
+                        <iframe :src="selected.preview.url" @load="loaded = true"
+                                title="Live preview"
+                                loading="lazy"
+                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                                class="relative w-full h-full border-0"></iframe>
+                    </div>
+                </div>
+            </template>
+        </div>
 
     </div>
     @endif

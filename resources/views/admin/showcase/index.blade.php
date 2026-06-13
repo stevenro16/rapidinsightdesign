@@ -115,9 +115,14 @@
                             <p class="text-xs text-muted mt-1">JPG, PNG, GIF, WebP — max 4 MB</p>
                         </div>
 
-                        {{-- Preview HTML --}}
-                        <div class="mb-3" x-data="{ removing: false }">
-                            <label class="label">Public Preview HTML <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+                        {{-- Public Preview (URL or HTML file, shown when card is clicked) --}}
+                        <div class="mb-3 p-3 rounded-lg border border-border bg-surface-2/40" x-data="{ removing: false }">
+                            <label class="label">Public Preview <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+
+                            <input type="url" name="preview_url" value="{{ old('preview_url', $item->preview_url) }}"
+                                   class="input mb-2" placeholder="https://demo.example.com">
+
+                            <p class="text-xs text-muted mb-1">…or upload an HTML file:</p>
                             @if($item->preview_html_path)
                             <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-surface-2 border border-border">
                                 <x-icon name="document" class="w-4 h-4 text-primary shrink-0" />
@@ -131,7 +136,13 @@
                             <input type="file" name="preview_html" accept=".html,.htm"
                                    :disabled="removing"
                                    class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30 disabled:opacity-40">
-                            <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB</p>
+                            <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB. If a URL is set above, it takes precedence over the file.</p>
+
+                            <label class="label mt-3">Display in</label>
+                            <select name="preview_mode" class="select">
+                                <option value="frame" {{ old('preview_mode', $item->preview_mode) === 'frame' ? 'selected' : '' }}>Preview frame (embedded)</option>
+                                <option value="window" {{ old('preview_mode', $item->preview_mode) === 'window' ? 'selected' : '' }}>New window / tab</option>
+                            </select>
                         </div>
 
                         <label class="flex items-center gap-2 mb-3 cursor-pointer">
@@ -233,11 +244,20 @@
                                class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30">
                         <p class="text-xs text-muted mt-1">JPG, PNG, GIF, WebP — max 4 MB</p>
                     </div>
-                    <div>
-                        <label class="label">Public Preview HTML <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+                    <div class="p-3 rounded-lg border border-border bg-surface-2/40">
+                        <label class="label">Public Preview <span class="text-muted font-normal">(shown when card is clicked)</span></label>
+                        <input type="url" name="preview_url" value="{{ old('preview_url') }}"
+                               class="input mb-2" placeholder="https://demo.example.com">
+                        <p class="text-xs text-muted mb-1">…or upload an HTML file:</p>
                         <input type="file" name="preview_html" accept=".html,.htm"
                                class="block w-full text-sm text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30">
-                        <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB</p>
+                        <p class="text-xs text-muted mt-1">.html or .htm — max 2 MB. If a URL is set above, it takes precedence over the file.</p>
+
+                        <label class="label mt-3">Display in</label>
+                        <select name="preview_mode" class="select">
+                            <option value="frame" {{ old('preview_mode', 'frame') === 'frame' ? 'selected' : '' }}>Preview frame (embedded)</option>
+                            <option value="window" {{ old('preview_mode') === 'window' ? 'selected' : '' }}>New window / tab</option>
+                        </select>
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" checked class="rounded">
