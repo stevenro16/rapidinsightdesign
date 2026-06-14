@@ -178,6 +178,9 @@ class ShowcaseController extends Controller
 
     private function notifyApproved(User $user, ShowroomItem $showroomItem): void
     {
+        if (! $user->email_notifications) {
+            return; // recipient opted out of email notifications
+        }
         try {
             Mail::to($user->email)->send(new AccessApproved($user, $showroomItem));
         } catch (\Throwable $e) {

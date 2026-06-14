@@ -64,6 +64,7 @@
                     <p style="margin:0; font-size:12px; color:#6e7781;">
                         RapidInsight Designs &middot; admin@rapidinsightdesigns.com &middot; rapidinsightdesigns.com
                     </p>
+                    @include('emails.partials.prefs-link', ['prefsUser' => $inquiry->user])
                     <p style="margin:6px 0 0; font-size:11px; color:#9aa4b5;">
                         This is an automated confirmation. You can simply reply to this email to reach our team.
                     </p>

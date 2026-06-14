@@ -33,6 +33,9 @@ class ProfileController extends Controller
             'postal_code'   => ['nullable', 'string', 'max:20'],
         ]);
 
+        // Checkbox: absent when unchecked, so read it explicitly.
+        $data['email_notifications'] = $request->boolean('email_notifications');
+
         $user->update($data);
 
         return back()->with('success', 'Your details have been saved.');

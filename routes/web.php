@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerInquiryController;
 use App\Http\Controllers\CustomerInvoiceController;
 use App\Http\Controllers\CustomerWorkOrderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailPreferenceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public;
 use App\Http\Controllers\ShowroomController;
@@ -23,6 +24,12 @@ Route::get('/products',     [Public\ProductsController::class,  'index'])->name(
 Route::get('/showcase',     [Public\ShowcaseController::class,  'index'])->name('showcase');
 Route::get('/contact',      [Public\ContactController::class,   'index'])->name('contact');
 Route::post('/contact',     [Public\ContactController::class,   'store'])->name('contact.store');
+
+/* ─── Email preferences (signed link from email footers — no login needed) ── */
+Route::middleware('signed')->group(function () {
+    Route::get('/email/preferences/{user}',   [EmailPreferenceController::class, 'edit'])->name('email.preferences');
+    Route::patch('/email/preferences/{user}', [EmailPreferenceController::class, 'update'])->name('email.preferences.update');
+});
 
 /* ─── Auth ──────────────────────────────────────────────────────────────── */
 Route::middleware('guest')->group(function () {

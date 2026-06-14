@@ -60,8 +60,8 @@ class InquiryController extends Controller
             'visible_to_customer' => $visible,
         ]);
 
-        // Notify the customer when a reply is shared with them (and an account is linked).
-        if ($visible && $inquiry->user) {
+        // Notify the customer when a reply is shared with them (account linked + opted in).
+        if ($visible && $inquiry->user && $inquiry->user->email_notifications) {
             try {
                 Mail::to($inquiry->user->email)->send(new InquiryReply($inquiry, $data['body'], toCustomer: true));
             } catch (\Throwable $e) {

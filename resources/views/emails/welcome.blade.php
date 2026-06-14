@@ -44,6 +44,7 @@
                     <p style="margin:0; font-size:12px; color:#6e7781;">
                         RapidInsight Designs &middot; admin@rapidinsightdesigns.com &middot; rapidinsightdesigns.com
                     </p>
+                    @include('emails.partials.prefs-link', ['prefsUser' => $user])
                     <p style="margin:6px 0 0; font-size:11px; color:#9aa4b5;">
                         You're receiving this because an account was created with this email address.
                     </p>

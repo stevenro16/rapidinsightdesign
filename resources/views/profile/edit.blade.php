@@ -44,6 +44,16 @@
             </div>
         </div>
 
+        <div class="pt-2 border-t border-border">
+            <p class="label">Communication preferences</p>
+            <label class="flex items-start gap-2 mt-1 cursor-pointer">
+                <input type="checkbox" name="email_notifications" value="1" class="rounded mt-0.5" {{ old('email_notifications', $user->email_notifications) ? 'checked' : '' }}>
+                <span class="text-sm text-text">Email me notifications
+                    <span class="block text-xs text-muted">Updates on agreements, work orders, invoices, and replies to your messages. Account &amp; security emails (like password resets) are always sent.</span>
+                </span>
+            </label>
+        </div>
+
         <div><button class="btn-primary">Save Details</button></div>
     </form>
 

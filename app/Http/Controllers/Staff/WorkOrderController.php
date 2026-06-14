@@ -176,6 +176,10 @@ class WorkOrderController extends Controller
 
     private function safeMail(string $to, $mailable): void
     {
+        // Respect the recipient's email-notification preference.
+        if (\App\Models\User::where('email', $to)->where('email_notifications', false)->exists()) {
+            return;
+        }
         try {
             Mail::to($to)->send($mailable);
         } catch (\Throwable $e) {

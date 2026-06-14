@@ -28,6 +28,7 @@
 
                 <tr><td style="background:#f6f8fb; padding:18px 32px; border-top:1px solid #e1e6ef;">
                     <p style="margin:0; font-size:12px; color:#6e7781;">RapidInsight Designs &middot; admin@rapidinsightdesigns.com &middot; rapidinsightdesigns.com</p>
+                    @include('emails.partials.prefs-link', ['prefsUser' => $customer])
                 </td></tr>
             </table>
         </td></tr>

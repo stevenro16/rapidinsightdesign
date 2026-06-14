@@ -38,6 +38,7 @@
 
                 <tr><td style="background:#f6f8fb; padding:16px 32px; border-top:1px solid #e1e6ef;">
                     <p style="margin:0; font-size:12px; color:#6e7781;">RapidInsight Designs &middot; {{ $toCustomer ? 'admin@rapidinsightdesigns.com' : 'automated notification' }}</p>
+                    @include('emails.partials.prefs-link', ['prefsUser' => $toCustomer ? $inquiry->user : null])
                 </td></tr>
             </table>
         </td></tr>
