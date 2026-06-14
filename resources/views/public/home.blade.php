@@ -49,10 +49,11 @@
 
         {{-- Logo visual ─────────────────────────────────────────────────── --}}
         <div class="hidden lg:flex items-center justify-center animate-fade-in-up delay-400 opacity-0-init">
-            <div class="relative" x-data="heroOrb()">
+            <div class="relative" x-data="heroOrb()"
+                 @pointerenter="hover = 1" @pointerleave="hover = 0; reset()" @pointermove="tilt($event)">
                 {{-- WebGL energy orb (behind everything; CSS glow below is the graceful fallback) --}}
                 <canvas x-ref="canvas" aria-hidden="true"
-                        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] pointer-events-none"
+                        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[640px] pointer-events-none"
                         style="z-index:0;"></canvas>
                 {{-- Outer glow ring --}}
                 <div class="absolute inset-0 rounded-full animate-glow-pulse"
@@ -64,12 +65,16 @@
                 <div class="absolute inset-0 rounded-full border border-primary/10 animate-float"
                      style="transform: scale(1.15); animation-duration: 7s; animation-delay: -1s;"></div>
 
-                {{-- Logo card --}}
-                <div class="relative w-56 h-56 rounded-2xl flex items-center justify-center animate-float border border-primary/30"
-                     style="background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-2) 100%);
-                            box-shadow: 0 0 40px rgba(109,190,46,0.15), 0 0 80px rgba(109,190,46,0.06), inset 0 1px 0 rgba(109,190,46,0.1);">
-                    <img src="/images/logo.png" alt="RapidInsight Designs"
-                         class="w-140 h-auto drop-shadow-[0_0_12px_rgba(109,190,46,0.4)]">
+                {{-- Float wrapper carries the bob + perspective; the card tilts inside it --}}
+                <div class="animate-float" style="perspective: 1000px;">
+                    {{-- Logo card — tilts toward the cursor on hover --}}
+                    <div x-ref="card"
+                         class="relative w-80 h-80 rounded-2xl flex items-center justify-center border border-primary/30 transition-transform duration-200 ease-out will-change-transform"
+                         style="background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-2) 100%);
+                                box-shadow: 0 0 50px rgba(109,190,46,0.18), 0 0 100px rgba(109,190,46,0.07), inset 0 1px 0 rgba(109,190,46,0.1);">
+                        <img src="/images/logo.png" alt="RapidInsight Designs"
+                             class="w-64 h-auto drop-shadow-[0_0_16px_rgba(109,190,46,0.45)]">
+                    </div>
                 </div>
 
                 {{-- Floating tag chips --}}
