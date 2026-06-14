@@ -200,5 +200,9 @@ Alpine.data('agreementReview', (defaultName = '') => ({
 import prospectsMap from './prospectsMap';
 Alpine.data('prospectsMap', prospectsMap);
 
+/* ─── Hero "energy orb" — tiny custom WebGL shader (homepage only) ───────── */
+import heroOrb from './heroOrb';
+Alpine.data('heroOrb', heroOrb);
+
 window.Alpine = Alpine;
 Alpine.start();

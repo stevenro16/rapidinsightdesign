@@ -49,7 +49,11 @@
 
         {{-- Logo visual ─────────────────────────────────────────────────── --}}
         <div class="hidden lg:flex items-center justify-center animate-fade-in-up delay-400 opacity-0-init">
-            <div class="relative">
+            <div class="relative" x-data="heroOrb()">
+                {{-- WebGL energy orb (behind everything; CSS glow below is the graceful fallback) --}}
+                <canvas x-ref="canvas" aria-hidden="true"
+                        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] pointer-events-none"
+                        style="z-index:0;"></canvas>
                 {{-- Outer glow ring --}}
                 <div class="absolute inset-0 rounded-full animate-glow-pulse"
                      style="background: radial-gradient(circle, rgba(109,190,46,0.18) 0%, transparent 70%); transform: scale(1.6);"></div>
