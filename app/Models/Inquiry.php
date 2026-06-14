@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class Inquiry extends Model
@@ -15,6 +16,16 @@ class Inquiry extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(InquiryNote::class)->oldest();
+    }
+
+    public function statusLabel(): string
+    {
+        return ucfirst(str_replace('_', ' ', $this->status));
     }
 
     public function scopeNew(Builder $query): Builder

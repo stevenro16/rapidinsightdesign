@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShowroomItem;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,6 +44,8 @@ class CustomerController extends Controller
             'customerNotes.author',
             'files.uploader',
             'invoices',
+            'agreements.payments',
+            'workOrders',
         ]);
 
         $billed      = $user->invoices->sum('amount');
@@ -57,10 +60,17 @@ class CustomerController extends Controller
         abort_unless($user->role === 'customer', 404);
 
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:120'],
-            'email'   => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'company' => ['nullable', 'string', 'max:120'],
-            'phone'   => ['nullable', 'string', 'max:40'],
+            'name'          => ['required', 'string', 'max:120'],
+            'email'         => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'company'       => ['nullable', 'string', 'max:120'],
+            'phone'         => ['nullable', 'string', 'max:40'],
+            'website'       => ['nullable', 'string', 'max:150'],
+            'billing_email' => ['nullable', 'email', 'max:150'],
+            'address_line1' => ['nullable', 'string', 'max:150'],
+            'address_line2' => ['nullable', 'string', 'max:150'],
+            'city'          => ['nullable', 'string', 'max:100'],
+            'state'         => ['nullable', 'string', 'max:100'],
+            'postal_code'   => ['nullable', 'string', 'max:20'],
         ]);
 
         $user->update($data);
@@ -90,5 +100,15 @@ class CustomerController extends Controller
         return back()->with('success', $user->is_active
             ? "{$user->name}'s login is now active."
             : "{$user->name}'s login has been deactivated.");
+    }
+
+    /** Remove a customer's ShowRoom access (or pending request) for one item. */
+    public function revokeAccess(User $user, ShowroomItem $showroomItem): RedirectResponse
+    {
+        abort_unless($user->role === 'customer', 404);
+
+        $user->showroomItems()->detach($showroomItem->id);
+
+        return back()->with('success', "Removed {$user->name}'s access to {$showroomItem->title}.");
     }
 }

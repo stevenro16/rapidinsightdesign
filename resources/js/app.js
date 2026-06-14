@@ -3,20 +3,30 @@ import persist from '@alpinejs/persist';
 
 Alpine.plugin(persist);
 
-/* ─── Login modal ───────────────────────────────────────────────────────── */
+/* ─── Login + Register modals ───────────────────────────────────────────── */
 Alpine.data('loginModal', () => ({
     open: false,
+    registerOpen: false,
     email: Alpine.$persist('').as('rid_email'),
     password: '',
     remember: false,
     loading: false,
+    registerLoading: false,
 
-    show() { this.open = true; this.$nextTick(() => this.$refs.emailInput?.focus()); },
+    show() { this.registerOpen = false; this.open = true; this.$nextTick(() => this.$refs.emailInput?.focus()); },
     hide() { this.open = false; this.password = ''; },
+
+    showRegister() { this.open = false; this.registerOpen = true; this.$nextTick(() => this.$refs.registerEmail?.focus()); },
+    hideRegister() { this.registerOpen = false; },
 
     submit() {
         this.loading = true;
         this.$refs.loginForm.submit();
+    },
+
+    registerSubmit() {
+        this.registerLoading = true;
+        this.$refs.registerForm.submit();
     },
 }));
 
@@ -103,6 +113,86 @@ Alpine.data('sortable', (reorderUrl) => ({
                     .finally(() => { this.saving = false; });
             },
         });
+    },
+}));
+
+/* ─── Agreement review: scroll-gate + signature (drawn or typed) ────────── */
+Alpine.data('agreementReview', (defaultName = '') => ({
+    reachedBottom: false,
+    agreed: false,
+    method: 'drawn',     // 'drawn' | 'typed'
+    name: defaultName,   // legal name (prefilled from the customer's account)
+    chosenFont: '',      // cursive family for typed signatures
+    // canvas state
+    ctx: null,
+    drawing: false,
+    hasInk: false,
+    last: { x: 0, y: 0 },
+
+    init() {
+        const canvas = this.$refs.canvas;
+        if (canvas) {
+            this.ctx = canvas.getContext('2d');
+            this.ctx.lineWidth = 2.5;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            this.ctx.strokeStyle = '#111827';
+        }
+        // Short documents that don't scroll should still enable signing.
+        this.$nextTick(() => this.checkBottom(this.$refs.doc));
+    },
+
+    onScroll(e) { this.checkBottom(e.target); },
+    checkBottom(el) {
+        if (!el) return;
+        if (el.scrollHeight - el.scrollTop - el.clientHeight < 8) this.reachedBottom = true;
+    },
+
+    // pointer → canvas-buffer coordinates (buffer is fixed 500x180, CSS-scaled)
+    pos(e) {
+        const canvas = this.$refs.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const t = (e.touches && e.touches[0]) ? e.touches[0] : e;
+        return {
+            x: (t.clientX - rect.left) * (canvas.width / rect.width),
+            y: (t.clientY - rect.top) * (canvas.height / rect.height),
+        };
+    },
+    startDraw(e) { e.preventDefault(); this.drawing = true; this.last = this.pos(e); },
+    draw(e) {
+        if (!this.drawing) return;
+        e.preventDefault();
+        const p = this.pos(e);
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.last.x, this.last.y);
+        this.ctx.lineTo(p.x, p.y);
+        this.ctx.stroke();
+        this.last = p;
+        this.hasInk = true;
+    },
+    stopDraw() { this.drawing = false; },
+    clearPad() {
+        const c = this.$refs.canvas;
+        this.ctx.clearRect(0, 0, c.width, c.height);
+        this.hasInk = false;
+    },
+
+    signatureReady() {
+        // Drawn signatures don't need a typed name; the typed style does.
+        return this.method === 'drawn'
+            ? this.hasInk
+            : (this.name.trim().length > 0 && !!this.chosenFont);
+    },
+    canSign() { return this.reachedBottom && this.agreed && this.signatureReady(); },
+
+    submitSignature() {
+        if (!this.canSign()) return;
+        this.$refs.fMethod.value = this.method;
+        this.$refs.fFont.value = this.method === 'typed' ? this.chosenFont : '';
+        this.$refs.fData.value = this.method === 'drawn'
+            ? this.$refs.canvas.toDataURL('image/png')
+            : this.name;
+        this.$refs.signForm.submit();
     },
 }));
 

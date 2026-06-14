@@ -15,7 +15,8 @@ export default (config) => ({
     scanning: false,
 
     filters: {
-        statuses: [...config.statuses],
+        // Default to only "new" prospects; a ?status= deep-link overrides this in init().
+        statuses: ['new'],
         category: '',
         band: '',
         q: '',
@@ -42,6 +43,13 @@ export default (config) => ({
     },
 
     async init() {
+        // Deep-link a status filter, e.g. /admin/prospects?status=shortlisted
+        const requested = new URLSearchParams(window.location.search).get('status');
+        const wanted = (requested ? requested.split(',') : [])
+            .map(s => s.trim())
+            .filter(s => config.statuses.includes(s));
+        if (wanted.length) this.filters.statuses = wanted;
+
         const leaflet = await import('leaflet');
         await import('leaflet/dist/leaflet.css');
         this.L = leaflet.default ?? leaflet;

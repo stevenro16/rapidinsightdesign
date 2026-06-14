@@ -11,18 +11,21 @@
             <div class="space-y-6">
                 @php
                 $fields = [
-                    ['hero_headline',    'Hero Headline',          'Smart Design, Optimized Workflows built for Efficiency.', 'text'],
-                    ['hero_subheadline', 'Hero Sub-headline',      'We craft high-performance web applications...', 'textarea'],
-                    ['about_text',       'About Paragraph',        'RapidInsight Designs specializes in...', 'textarea'],
-                    ['contact_intro',    'Contact Page Intro',     'Have a project in mind? We\'d love to hear about it.', 'textarea'],
+                    ['hero_headline',    'Hero Headline',          'Smart Design, Optimized Workflows built for Efficiency.', 'text', 3],
+                    ['hero_subheadline', 'Hero Sub-headline',      'We craft high-performance web applications...', 'textarea', 3],
+                    ['about_text',       'About Paragraph',        'RapidInsight Designs specializes in...', 'textarea', 3],
+                    ['contact_intro',    'Contact Page Intro',     'Have a project in mind? We\'d love to hear about it.', 'textarea', 3],
+                    ['agreement_default_text', 'Standard Agreement Template', \App\Models\Agreement::DEFAULT_BODY, 'textarea', 16],
+                    ['agreement_production_text', 'Production Release Template', \App\Models\Agreement::PRODUCTION_BODY, 'textarea', 14],
+                    ['default_tax_rate', 'Default Tax Rate (%)', '0', 'text', 3],
                 ];
                 @endphp
 
-                @foreach($fields as [$key, $label, $placeholder, $type])
+                @foreach($fields as [$key, $label, $placeholder, $type, $rows])
                 <div>
                     <label class="label">{{ $label }}</label>
                     @if($type === 'textarea')
-                    <textarea name="content[{{ $key }}]" rows="3"
+                    <textarea name="content[{{ $key }}]" rows="{{ $rows }}"
                               class="input resize-y">{{ $contents[$key]->value ?? $placeholder }}</textarea>
                     @else
                     <input type="text" name="content[{{ $key }}]"

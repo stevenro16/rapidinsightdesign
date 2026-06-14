@@ -12,6 +12,7 @@ class ShowroomItem extends Model
 {
     protected $fillable = [
         'title', 'description', 'embed_url', 'public_url', 'private_url',
+        'demo_username', 'demo_password', 'access_notes',
         'preview_html_path', 'preview_url', 'preview_mode',
         'thumbnail_path', 'tech_tags', 'is_active', 'sort_order',
     ];
@@ -34,7 +35,8 @@ class ShowroomItem extends Model
     public function customers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'customer_showroom_access')
-            ->withPivot(['granted_by', 'granted_at'])
+            ->withPivot(['granted_by', 'granted_at', 'status', 'requested_at', 'approved_at'])
+            ->using(CustomerShowroomAccess::class)
             ->withTimestamps();
     }
 
@@ -64,5 +66,17 @@ class ShowroomItem extends Model
     public function hasPreview(): bool
     {
         return $this->previewUrl() !== null;
+    }
+
+    /** True when there are login credentials/notes to reveal to an approved customer. */
+    public function hasDemoLogin(): bool
+    {
+        return filled($this->demo_username) || filled($this->demo_password) || filled($this->access_notes);
+    }
+
+    /** Where an approved customer's "Launch" button should point. */
+    public function launchUrl(): ?string
+    {
+        return $this->private_url ?: $this->embed_url ?: null;
     }
 }

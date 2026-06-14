@@ -63,7 +63,7 @@
     {{-- ── Tabs ───────────────────────────────────────────────────────────── --}}
     <div x-data="tabs('overview')">
         <div class="flex gap-1 border-b border-border overflow-x-auto">
-            @php $tabs = ['overview' => 'Overview', 'notes' => 'Notes', 'files' => 'Files', 'invoices' => 'Invoices', 'access' => 'Access & Inquiries']; @endphp
+            @php $tabs = ['overview' => 'Overview', 'agreements' => 'Agreements', 'work_orders' => 'Work Orders', 'notes' => 'Notes', 'files' => 'Files', 'invoices' => 'Invoices', 'access' => 'Access & Inquiries']; @endphp
             @foreach($tabs as $key => $label)
             <button @click="setTab('{{ $key }}')"
                     :class="isActive('{{ $key }}') ? 'text-primary border-b-2 border-primary' : 'text-muted hover:text-text'"
@@ -82,6 +82,9 @@
                         <div class="flex justify-between py-2"><dt class="text-muted">Email</dt><dd class="text-text">{{ $user->email }}</dd></div>
                         <div class="flex justify-between py-2"><dt class="text-muted">Company</dt><dd class="text-text">{{ $user->company ?? '—' }}</dd></div>
                         <div class="flex justify-between py-2"><dt class="text-muted">Phone</dt><dd class="text-text">{{ $user->phone ?? '—' }}</dd></div>
+                        @if($user->website)<div class="flex justify-between py-2 gap-4"><dt class="text-muted shrink-0">Website</dt><dd class="text-text truncate">{{ $user->website }}</dd></div>@endif
+                        @if($user->billing_email)<div class="flex justify-between py-2"><dt class="text-muted">Billing email</dt><dd class="text-text">{{ $user->billing_email }}</dd></div>@endif
+                        @if($user->fullAddress())<div class="flex justify-between py-2 gap-4"><dt class="text-muted shrink-0">Address</dt><dd class="text-text text-right">{{ $user->fullAddress() }}</dd></div>@endif
                         <div class="flex justify-between py-2"><dt class="text-muted">Login status</dt><dd class="text-text">{{ $user->is_active ? 'Active' : 'Deactivated' }}</dd></div>
                     </dl>
                 </div>
@@ -96,6 +99,77 @@
                     <p class="text-sm text-muted">No notes yet — add one in the Notes tab.</p>
                     @endforelse
                 </div>
+            </div>
+
+            {{-- ── Agreements ────────────────────────────────────────────── --}}
+            <div x-show="isActive('agreements')" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-muted">{{ $user->agreements->count() }} {{ $user->agreements->count() === 1 ? 'agreement' : 'agreements' }}</p>
+                    <form method="POST" action="{{ route('staff.customers.agreements.store', $user) }}">
+                        @csrf
+                        <button type="submit" class="btn-primary btn-sm gap-1.5"><x-icon name="plus" class="w-3.5 h-3.5" />New Agreement</button>
+                    </form>
+                </div>
+
+                @if($user->agreements->isEmpty())
+                <p class="text-sm text-muted">No agreements yet. Create one to send a statement of work for signature and payment.</p>
+                @else
+                <div class="card p-0 overflow-hidden">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Status</th><th>Total</th><th>Paid</th><th>Balance</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach($user->agreements as $agreement)
+                            <tr>
+                                <td class="text-text font-medium">{{ $agreement->title }}</td>
+                                <td>
+                                    <span class="badge {{ $agreement->statusBadgeClass() }}">{{ $agreement->statusLabel() }}</span>
+                                    @if($agreement->actionNeededForAdmin())<span class="badge badge-amber text-[10px]">validate</span>@endif
+                                </td>
+                                <td class="text-text">{{ $agreement->has_cost ? '$'.number_format($agreement->total_amount, 2) : '—' }}</td>
+                                <td class="text-muted">{{ $agreement->has_cost ? '$'.number_format($agreement->amountPaid(), 2) : '—' }}</td>
+                                <td class="text-muted">{{ $agreement->has_cost ? '$'.number_format($agreement->balance(), 2) : '—' }}</td>
+                                <td class="text-muted text-xs">{{ $agreement->created_at->format('M j, Y') }}</td>
+                                <td class="text-right whitespace-nowrap">
+                                    <a href="{{ route('staff.customers.agreements.edit', [$user, $agreement]) }}" class="btn-ghost btn-sm" title="Open / edit"><x-icon name="pencil" class="w-3.5 h-3.5" /></a>
+                                    <a href="{{ route('staff.customers.agreements.pdf', [$user, $agreement]) }}" target="_blank" class="btn-ghost btn-sm" title="PDF"><x-icon name="document" class="w-3.5 h-3.5" /></a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+            </div>
+
+            {{-- ── Work Orders ───────────────────────────────────────────── --}}
+            <div x-show="isActive('work_orders')" class="space-y-4">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <p class="text-sm text-muted">{{ $user->workOrders->count() }} {{ $user->workOrders->count() === 1 ? 'work order' : 'work orders' }}</p>
+                    <form method="POST" action="{{ route('staff.customers.work-orders.store', $user) }}" class="flex gap-2">
+                        @csrf
+                        <input type="text" name="title" class="input py-1.5 text-sm w-48" placeholder="New work order title" required>
+                        <button class="btn-primary btn-sm gap-1.5 whitespace-nowrap"><x-icon name="plus" class="w-3.5 h-3.5" />Create</button>
+                    </form>
+                </div>
+                @if($user->workOrders->isEmpty())
+                <p class="text-sm text-muted">No work orders yet. Create one here, or convert an agreement into a work order.</p>
+                @else
+                <div class="card p-0 overflow-hidden">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Status</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach($user->workOrders as $wo)
+                            <tr>
+                                <td class="text-text font-medium">{{ $wo->title }}</td>
+                                <td><span class="badge {{ $wo->statusBadgeClass() }}">{{ $wo->statusLabel() }}</span></td>
+                                <td class="text-muted text-xs">{{ $wo->created_at->format('M j, Y') }}</td>
+                                <td class="text-right"><a href="{{ route('staff.work-orders.edit', $wo) }}" class="btn-ghost btn-sm">Open</a></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
             </div>
 
             {{-- ── Notes ─────────────────────────────────────────────────── --}}
@@ -190,7 +264,7 @@
                         <thead><tr><th>#</th><th>Description</th><th>Amount</th><th>Status</th><th>Issued</th><th>Due</th><th></th></tr></thead>
                         <tbody>
                             @foreach($user->invoices as $invoice)
-                            <tr x-data="{ editOpen: false }">
+                            <tr>
                                 <td class="text-text font-medium">{{ $invoice->number }}</td>
                                 <td class="text-muted">{{ $invoice->description ?? '—' }}</td>
                                 <td class="text-text">${{ number_format($invoice->amount, 2) }}</td>
@@ -207,28 +281,11 @@
                                     @if($invoice->file_path)
                                     <a href="{{ Storage::url($invoice->file_path) }}" target="_blank" class="btn-ghost btn-sm gap-1" title="View attached file"><x-icon name="download" class="w-3.5 h-3.5" /></a>
                                     @endif
-                                    <button @click="editOpen = true" class="btn-ghost btn-sm"><x-icon name="pencil" class="w-3.5 h-3.5" /></button>
+                                    <a href="{{ route('staff.customers.invoices.edit', [$user, $invoice]) }}" class="btn-ghost btn-sm" title="Open invoice editor"><x-icon name="pencil" class="w-3.5 h-3.5" /></a>
                                     <form method="POST" action="{{ route('staff.customers.invoices.destroy', [$user, $invoice]) }}" class="inline" x-data="confirmDelete('Delete invoice {{ addslashes($invoice->number) }}?')">
                                         @csrf @method('DELETE')
                                         <button @click.prevent="confirm($el.closest('form'))" class="btn-ghost btn-sm text-red-400"><x-icon name="trash" class="w-3.5 h-3.5" /></button>
                                     </form>
-
-                                    {{-- Edit invoice modal --}}
-                                    <div x-show="editOpen" x-cloak @keydown.escape.window="editOpen = false" @click.self="editOpen = false"
-                                         class="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto text-left"
-                                         style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);">
-                                        <div class="card w-full max-w-lg my-8">
-                                            <div class="flex items-center justify-between mb-4">
-                                                <h3 class="font-semibold text-text">Edit Invoice {{ $invoice->number }}</h3>
-                                                <button @click="editOpen = false" class="btn-ghost btn-sm"><x-icon name="x" class="w-4 h-4" /></button>
-                                            </div>
-                                            <form method="POST" action="{{ route('staff.customers.invoices.update', [$user, $invoice]) }}" enctype="multipart/form-data">
-                                                @csrf @method('PATCH')
-                                                @include('staff.customers._invoice_fields', ['invoice' => $invoice])
-                                                <div class="flex gap-2 mt-4"><button class="btn-primary btn-sm">Save</button><button type="button" @click="editOpen = false" class="btn-ghost btn-sm">Cancel</button></div>
-                                            </form>
-                                        </div>
-                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -264,12 +321,26 @@
                     @else
                     <div class="divide-y divide-border">
                         @foreach($user->showroomItems as $item)
-                        <div class="p-4 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-text">{{ $item->title }}</p>
-                                <p class="text-xs text-muted">Granted {{ $item->pivot->granted_at?->diffForHumans() }}</p>
+                        @php $pending = ($item->pivot->status ?? 'approved') === 'pending'; @endphp
+                        <div class="p-4 flex items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-text truncate">{{ $item->title }}</p>
+                                <p class="text-xs text-muted">
+                                    {{ $pending
+                                        ? 'Requested ' . ($item->pivot->requested_at?->diffForHumans() ?? '')
+                                        : 'Granted ' . ($item->pivot->granted_at?->diffForHumans() ?? '') }}
+                                </p>
                             </div>
-                            <span class="badge {{ $item->is_active ? 'badge-green' : 'badge-muted' }}">{{ $item->is_active ? 'Active' : 'Inactive' }}</span>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="badge {{ $pending ? 'badge-amber' : 'badge-green' }}">{{ $pending ? 'Pending' : 'Approved' }}</span>
+                                <form method="POST" action="{{ route('staff.customers.access.revoke', [$user, $item]) }}"
+                                      x-data="confirmDelete('{{ $pending ? 'Deny' : 'Remove' }} {{ addslashes($user->name) }}\'s access to {{ addslashes($item->title) }}?')">
+                                    @csrf @method('DELETE')
+                                    <button @click.prevent="confirm($el.closest('form'))" class="btn-ghost btn-sm text-[var(--color-danger)]" title="Remove access">
+                                        <x-icon name="trash" class="w-3.5 h-3.5" />
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         @endforeach
                     </div>
@@ -305,18 +376,30 @@
     <div x-show="editOpen" x-cloak @keydown.escape.window="editOpen = false" @click.self="editOpen = false"
          class="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
          style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);">
-        <div class="card w-full max-w-lg my-8">
+        <div class="card w-full max-w-2xl my-8">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold text-text">Edit Customer</h3>
                 <button @click="editOpen = false" class="btn-ghost btn-sm"><x-icon name="x" class="w-4 h-4" /></button>
             </div>
             <form method="POST" action="{{ route('staff.customers.update', $user) }}" class="space-y-3">
                 @csrf @method('PATCH')
-                <div><label class="label">Name</label><input type="text" name="name" value="{{ old('name', $user->name) }}" class="input" required></div>
-                <div><label class="label">Email</label><input type="email" name="email" value="{{ old('email', $user->email) }}" class="input" required></div>
                 <div class="grid sm:grid-cols-2 gap-3">
+                    <div><label class="label">Name</label><input type="text" name="name" value="{{ old('name', $user->name) }}" class="input" required></div>
+                    <div><label class="label">Email</label><input type="email" name="email" value="{{ old('email', $user->email) }}" class="input" required></div>
                     <div><label class="label">Company</label><input type="text" name="company" value="{{ old('company', $user->company) }}" class="input"></div>
                     <div><label class="label">Phone</label><input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="input"></div>
+                    <div><label class="label">Website</label><input type="text" name="website" value="{{ old('website', $user->website) }}" class="input"></div>
+                    <div><label class="label">Billing email</label><input type="email" name="billing_email" value="{{ old('billing_email', $user->billing_email) }}" class="input"></div>
+                </div>
+                <p class="label">Mailing address</p>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="sm:col-span-2"><input type="text" name="address_line1" value="{{ old('address_line1', $user->address_line1) }}" class="input" placeholder="Street address"></div>
+                    <div class="sm:col-span-2"><input type="text" name="address_line2" value="{{ old('address_line2', $user->address_line2) }}" class="input" placeholder="Apt, suite (optional)"></div>
+                    <div><input type="text" name="city" value="{{ old('city', $user->city) }}" class="input" placeholder="City"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" name="state" value="{{ old('state', $user->state) }}" class="input" placeholder="State">
+                        <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" class="input" placeholder="ZIP">
+                    </div>
                 </div>
                 <div class="flex gap-2 pt-1"><button class="btn-primary btn-sm">Save</button><button type="button" @click="editOpen = false" class="btn-ghost btn-sm">Cancel</button></div>
             </form>

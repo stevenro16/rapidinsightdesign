@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-data="loginModal()" @keydown.escape.window="hide()">
+<body x-data="loginModal()" @keydown.escape.window="hide(); hideRegister()">
 
     {{-- ── Navigation ──────────────────────────────────────────────────── --}}
     <header class="fixed top-0 inset-x-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-bg)]/90 backdrop-blur-md">
@@ -49,9 +49,13 @@
                         </button>
                     </form>
                 @else
-                    <button @click="show()" class="btn-primary btn-sm animate-glow-pulse">
+                    <button @click="show()" class="btn-ghost btn-sm">
                         <x-icon name="lock" class="w-4 h-4" />
                         Sign In
+                    </button>
+                    <button @click="showRegister()" class="btn-primary btn-sm animate-glow-pulse">
+                        <x-icon name="user" class="w-4 h-4" />
+                        Create Account
                     </button>
                 @endauth
 
@@ -198,6 +202,93 @@
                                 Signing in…
                             </span>
                         </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Register modal ───────────────────────────────────────────────── --}}
+    @php
+        // Lightweight, self-contained captcha (no external service / keys needed).
+        $captchaA = random_int(2, 9);
+        $captchaB = random_int(2, 9);
+        session(['register_captcha' => $captchaA + $captchaB]);
+    @endphp
+    <div x-show="registerOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         x-init="$nextTick(() => { @if($errors->getBag('register')->isNotEmpty()) registerOpen = true @endif })"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         style="display: none;">
+
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="hideRegister()"></div>
+
+        {{-- Modal --}}
+        <div class="relative w-full max-w-md"
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+
+            <div class="card border-[var(--color-border)] shadow-2xl shadow-black/50">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-display font-semibold text-[var(--color-text)]">Create your account</h2>
+                        <p class="text-sm text-[var(--color-muted)] mt-0.5">Join RapidInsight Designs</p>
+                    </div>
+                    <button @click="hideRegister()" class="text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors p-1">
+                        <x-icon name="x" class="w-5 h-5" />
+                    </button>
+                </div>
+
+                @if($errors->getBag('register')->isNotEmpty())
+                <div class="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+                    {{ $errors->getBag('register')->first() }}
+                </div>
+                @endif
+
+                <form x-ref="registerForm" method="POST" action="/register" @submit.prevent="registerSubmit()">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label">Name</label>
+                            <input x-ref="registerEmail" type="text" name="name" value="{{ old('name') }}"
+                                   class="input" placeholder="Jane Doe" autocomplete="name" required>
+                        </div>
+                        <div>
+                            <label class="label">Email</label>
+                            <input type="email" name="email" value="{{ old('email') }}"
+                                   class="input" placeholder="you@example.com" autocomplete="email" required>
+                        </div>
+                        <div>
+                            <label class="label">Password</label>
+                            <input type="password" name="password"
+                                   class="input" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8">
+                        </div>
+                        <div>
+                            <label class="label">Confirm Password</label>
+                            <input type="password" name="password_confirmation"
+                                   class="input" placeholder="Re-enter password" autocomplete="new-password" required minlength="8">
+                        </div>
+                        <div>
+                            <label class="label">Verification — what is {{ $captchaA }} + {{ $captchaB }}?</label>
+                            <input type="number" name="captcha" class="input" placeholder="Answer" required autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn-primary w-full justify-center" :disabled="registerLoading">
+                            <span x-show="!registerLoading">Create Account</span>
+                            <span x-show="registerLoading" class="flex items-center gap-2">
+                                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                Creating…
+                            </span>
+                        </button>
+                        <p class="text-center text-sm text-[var(--color-muted)]">
+                            Already have an account?
+                            <button type="button" @click="show()" class="text-[var(--color-primary)] hover:underline">Sign in</button>
+                        </p>
                     </div>
                 </form>
             </div>

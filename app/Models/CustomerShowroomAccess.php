@@ -10,7 +10,9 @@ class CustomerShowroomAccess extends Pivot
     protected $table = 'customer_showroom_access';
 
     protected $casts = [
-        'granted_at' => 'datetime',
+        'granted_at'   => 'datetime',
+        'requested_at' => 'datetime',
+        'approved_at'  => 'datetime',
     ];
 
     public function user(): BelongsTo

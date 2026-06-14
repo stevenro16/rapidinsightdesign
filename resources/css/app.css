@@ -100,6 +100,10 @@
     .delay-500 { animation-delay: 500ms; }
 
     .opacity-0-init { opacity: 0; }
+
+    /* Horizontal carousels — hide the scrollbar while keeping scroll/drag */
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 /* ─── Components ────────────────────────────────────────────────────────── */

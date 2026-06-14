@@ -132,61 +132,71 @@
         {{-- Clip lives on the cards grid (below) so the wide preview panel can break out --}}
         <div style="display: grid;">
 
-            {{-- ── Cards grid (grid-area 1/1 — defines row height) ──────────────── --}}
-            {{-- overflow-x:clip hides flying cards without clipping the breakout panel --}}
-            <div style="grid-area: 1/1; overflow-x: clip;" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($items as $i => $item)
-                @php
-                    $slidesJson = $item->slides->map(fn($s) => [
-                        'title'       => $s->title,
-                        'headline'    => $s->headline,
-                        'description' => $s->description,
-                        'bullets'     => $s->bullets ?? [],
-                        'image'       => $s->image_path ? Storage::url($s->image_path) : null,
-                    ])->values();
-                    $previewJson = $item->hasPreview()
-                        ? ['url' => $item->previewUrl(), 'mode' => $item->previewMode()]
-                        : null;
-                    $flyDir   = $i % 2 === 0 ? '-120vw' : '120vw';
-                    $outDelay = $i * 55;
-                    $inDelay  = 200 + $i * 55;
-                @endphp
+            {{-- ── Cards grid (grid-area 1/1 — defines row height) ───────────────── --}}
+            {{-- 90vw on a clean element (Alpine :style below would clobber a static width) --}}
+            <div style="grid-area: 1/1; width: 90vw; margin-left: calc(50% - 45vw);">
+                {{-- fly-out wrapper: fades the grid out when a preview opens --}}
                 <div :style="selected
-                         ? 'transform: translateX({{ $flyDir }}); opacity: 0; pointer-events: none; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1) {{ $outDelay }}ms, opacity 0.4s ease {{ $outDelay }}ms;'
-                         : 'transform: none; opacity: 1; transition: transform 0.6s cubic-bezier(0.34,1.2,0.64,1) {{ $inDelay }}ms, opacity 0.4s ease {{ $inDelay }}ms;'">
-                    <div x-data="scrollReveal({{ $i * 80 }})"
-                         :class="visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-                         class="transition-all duration-500 relative rounded-2xl overflow-hidden group h-[346px] bg-surface-2 cursor-pointer"
-                         @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})">
+                         ? 'opacity: 0; transform: translateY(24px) scale(0.985); pointer-events: none; transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.4,0,0.2,1);'
+                         : 'opacity: 1; transform: none; transition: opacity 0.45s ease 0.1s, transform 0.55s cubic-bezier(0.34,1.2,0.64,1) 0.1s;'">
 
-                        {{-- Full-bleed image --}}
+                <div class="grid grid-cols-3 gap-6">
+                    @foreach($items as $i => $item)
+                    @php
+                        $slidesJson = $item->slides->map(fn($s) => [
+                            'title'       => $s->title,
+                            'headline'    => $s->headline,
+                            'description' => $s->description,
+                            'bullets'     => $s->bullets ?? [],
+                            'image'       => $s->image_path ? Storage::url($s->image_path) : null,
+                        ])->values();
+                        $previewJson = $item->hasPreview()
+                            ? ['url' => $item->previewUrl(), 'mode' => $item->previewMode()]
+                            : null;
+                        $isWindow = $item->hasPreview() && $item->previewMode() === 'window';
+                    @endphp
+                    <button type="button"
+                            @click="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})"
+                            class="group relative w-full h-[500px] overflow-hidden rounded-2xl border border-border bg-surface-2 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
+
+                        {{-- Preview image as the card background --}}
                         @if($item->thumbnail_path)
                         <img src="{{ Storage::url($item->thumbnail_path) }}" alt="{{ $item->title }}"
-                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                             class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105">
                         @else
-                        <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-2 to-surface">
                             <x-icon name="computer" class="w-16 h-16 text-border" />
                         </div>
                         @endif
 
-                        {{-- Gradient overlay — lighter so the image shows through the bottom banner --}}
-                        <div class="absolute inset-0 pointer-events-none"
-                             style="background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, transparent 100%);"></div>
+                        {{-- Subtle darkening for depth & legibility --}}
+                        <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/50 via-transparent to-black/10"></div>
 
-                        {{-- Bottom content --}}
-                        <div class="absolute inset-x-0 bottom-0 p-5 z-10">
-                            <h3 class="font-display font-semibold text-white leading-snug mb-1">{{ $item->title }}</h3>
+                        {{-- Live-preview marker (opens externally) --}}
+                        @if($isWindow)
+                        <span class="absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-white"
+                              style="background: rgba(13,17,23,0.55); backdrop-filter: blur(6px);">↗ Live</span>
+                        @endif
+
+                        {{-- Bottom info banner — slightly transparent, frosted glass --}}
+                        <div class="absolute inset-x-0 bottom-0 z-10 px-4 py-3.5 border-t border-white/10"
+                             style="background: rgba(13,17,23,0.70); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                            <h3 class="font-display font-semibold text-white leading-snug line-clamp-1">{{ $item->title }}</h3>
                             @if($item->description)
-                            <p class="text-sm text-white/65 mb-3 line-clamp-2 leading-snug">{{ $item->description }}</p>
+                            <p class="text-xs text-white/65 mt-1 leading-snug line-clamp-2">{{ $item->description }}</p>
                             @endif
-                            <button @click.stop="setItem({{ $item->id }}, {{ json_encode($slidesJson) }}, {{ json_encode($item->title) }}, {{ json_encode($previewJson) }})"
-                                    class="btn-primary btn-sm">
-                                {{ $item->hasPreview() && $item->previewMode() === 'window' ? '↗ Live Preview' : '+ Learn More' }}
-                            </button>
+                            @if($item->tech_tags)
+                            <div class="flex flex-wrap gap-1 mt-2.5">
+                                @foreach(array_slice($item->techTagsArray(), 0, 3) as $tag)
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium text-primary" style="background: rgba(109,190,46,0.15);">{{ trim($tag) }}</span>
+                                @endforeach
+                            </div>
+                            @endif
                         </div>
-                    </div>
+                    </button>
+                    @endforeach
                 </div>
-                @endforeach
+                </div>
             </div>
 
             {{-- ── Slideshow panel (grid-area 1/1 — overlays card area) ──────────── --}}

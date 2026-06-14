@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AccessApproved;
 use App\Models\ShowroomItem;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -22,15 +25,18 @@ class ShowcaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'title'        => ['required', 'string', 'max:100'],
-            'description'  => ['nullable', 'string'],
-            'private_url'  => ['nullable', 'url'],
-            'preview_url'  => ['nullable', 'url'],
-            'preview_mode' => ['nullable', 'in:frame,window'],
-            'tech_tags'    => ['nullable', 'string', 'max:200'],
-            'sort_order'   => ['nullable', 'integer'],
-            'thumbnail'    => ['nullable', 'image', 'max:4096'],
-            'preview_html' => ['nullable', 'file', 'mimes:html,htm', 'max:2048'],
+            'title'         => ['required', 'string', 'max:100'],
+            'description'   => ['nullable', 'string'],
+            'private_url'   => ['nullable', 'url'],
+            'demo_username' => ['nullable', 'string', 'max:120'],
+            'demo_password' => ['nullable', 'string', 'max:120'],
+            'access_notes'  => ['nullable', 'string', 'max:2000'],
+            'preview_url'   => ['nullable', 'url'],
+            'preview_mode'  => ['nullable', 'in:frame,window'],
+            'tech_tags'     => ['nullable', 'string', 'max:200'],
+            'sort_order'    => ['nullable', 'integer'],
+            'thumbnail'     => ['nullable', 'image', 'max:4096'],
+            'preview_html'  => ['nullable', 'file', 'mimes:html,htm', 'max:2048'],
         ]);
 
         $data['preview_mode'] = $data['preview_mode'] ?? 'frame';
@@ -57,6 +63,9 @@ class ShowcaseController extends Controller
             'title'              => ['required', 'string', 'max:100'],
             'description'        => ['nullable', 'string'],
             'private_url'        => ['nullable', 'url'],
+            'demo_username'      => ['nullable', 'string', 'max:120'],
+            'demo_password'      => ['nullable', 'string', 'max:120'],
+            'access_notes'       => ['nullable', 'string', 'max:2000'],
             'preview_url'        => ['nullable', 'url'],
             'preview_mode'       => ['nullable', 'in:frame,window'],
             'tech_tags'          => ['nullable', 'string', 'max:200'],
@@ -133,15 +142,46 @@ class ShowcaseController extends Controller
     public function grantAccess(Request $request, ShowroomItem $showroomItem, User $user): RedirectResponse
     {
         $showroomItem->customers()->syncWithoutDetaching([
-            $user->id => ['granted_by' => auth()->id(), 'granted_at' => now()],
+            $user->id => [
+                'status'      => 'approved',
+                'granted_by'  => auth()->id(),
+                'granted_at'  => now(),
+                'approved_at' => now(),
+            ],
         ]);
 
+        $this->notifyApproved($user, $showroomItem);
+
         return back()->with('success', "Access granted to {$user->name}.");
+    }
+
+    /** Approve a customer's pending access request. */
+    public function approveAccess(ShowroomItem $showroomItem, User $user): RedirectResponse
+    {
+        $showroomItem->customers()->updateExistingPivot($user->id, [
+            'status'      => 'approved',
+            'granted_by'  => auth()->id(),
+            'granted_at'  => now(),
+            'approved_at' => now(),
+        ]);
+
+        $this->notifyApproved($user, $showroomItem);
+
+        return back()->with('success', "Approved {$user->name}'s access to {$showroomItem->title}.");
     }
 
     public function revokeAccess(ShowroomItem $showroomItem, User $user): RedirectResponse
     {
         $showroomItem->customers()->detach($user->id);
-        return back()->with('success', "Access revoked for {$user->name}.");
+        return back()->with('success', "Access removed for {$user->name}.");
+    }
+
+    private function notifyApproved(User $user, ShowroomItem $showroomItem): void
+    {
+        try {
+            Mail::to($user->email)->send(new AccessApproved($user, $showroomItem));
+        } catch (\Throwable $e) {
+            Log::error('Access-approved email failed: ' . $e->getMessage());
+        }
     }
 }

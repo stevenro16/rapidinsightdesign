@@ -8,12 +8,12 @@
 
 <div class="grid sm:grid-cols-2 gap-3">
     <div>
-        <label class="label">Invoice # / Ref</label>
-        <input type="text" name="number" value="{{ old('number', $invoice?->number) }}" class="input" required placeholder="INV-1001">
+        <label class="label">Invoice # / Ref <span class="text-muted font-normal">(auto if blank)</span></label>
+        <input type="text" name="number" value="{{ old('number', $invoice?->number) }}" class="input" placeholder="INV-0001">
     </div>
     <div>
-        <label class="label">Amount ($)</label>
-        <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $invoice?->amount) }}" class="input" required>
+        <label class="label">Amount ($) <span class="text-muted font-normal">(opening line item)</span></label>
+        <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $invoice?->amount) }}" class="input">
     </div>
     <div class="sm:col-span-2">
         <label class="label">Description <span class="text-muted font-normal">(line summary)</span></label>
@@ -36,8 +36,8 @@
         <input type="date" name="issued_at" value="{{ old('issued_at', $invoice?->issued_at?->format('Y-m-d')) }}" class="input">
     </div>
     <div>
-        <label class="label">Due</label>
-        <input type="date" name="due_at" value="{{ old('due_at', $invoice?->due_at?->format('Y-m-d')) }}" class="input">
+        <label class="label">Due <span class="text-muted font-normal">(defaults to 1 week out)</span></label>
+        <input type="date" name="due_at" value="{{ old('due_at', $invoice?->due_at?->format('Y-m-d') ?? now()->addWeek()->format('Y-m-d')) }}" class="input">
     </div>
     <div>
         <label class="label">Paid on <span class="text-muted font-normal">(if paid)</span></label>

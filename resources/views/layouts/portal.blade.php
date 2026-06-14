@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- Cursive fonts for typed-signature samples on agreements --}}
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&family=Pacifico&family=Satisfy&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body x-data="portalShell()">
@@ -40,13 +42,47 @@
         {{-- Navigation --}}
         <nav class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
             @if(auth()->user()->isCustomer())
+                <a href="/dashboard" class="sidebar-link {{ request()->is('dashboard') ? 'active' : '' }}">
+                    <x-icon name="chart" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Dashboard</span>
+                </a>
+                <a href="/agreements" class="sidebar-link relative {{ request()->is('agreements*') ? 'active' : '' }}">
+                    <x-icon name="document" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Agreements</span>
+                    @if($agreementActionCount > 0)
+                        <span x-show="sidebarOpen" x-transition
+                              class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $agreementActionCount }}</span>
+                        <span x-show="!sidebarOpen"
+                              class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $agreementActionCount }}</span>
+                    @endif
+                </a>
+                <a href="/work-orders" class="sidebar-link relative {{ request()->is('work-orders*') ? 'active' : '' }}">
+                    <x-icon name="bolt" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Work Orders</span>
+                    @if($customerWoActionCount > 0)
+                        <span x-show="sidebarOpen" x-transition class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $customerWoActionCount }}</span>
+                        <span x-show="!sidebarOpen" class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $customerWoActionCount }}</span>
+                    @endif
+                </a>
+                <a href="/billing" class="sidebar-link relative {{ request()->is('billing*') ? 'active' : '' }}">
+                    <x-icon name="inbox" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Billing</span>
+                    @if($customerBillingDueCount > 0)
+                        <span x-show="sidebarOpen" x-transition class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $customerBillingDueCount }}</span>
+                        <span x-show="!sidebarOpen" class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-amber-500 text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $customerBillingDueCount }}</span>
+                    @endif
+                </a>
                 <a href="/showroom" class="sidebar-link {{ request()->is('showroom*') ? 'active' : '' }}">
                     <x-icon name="grid"  class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>ShowRoom</span>
                 </a>
-                <a href="/billing" class="sidebar-link {{ request()->is('billing*') ? 'active' : '' }}">
-                    <x-icon name="document" class="w-5 h-5 shrink-0" />
-                    <span x-show="sidebarOpen" x-transition>Billing</span>
+                <a href="/inquiries" class="sidebar-link {{ request()->is('inquiries*') ? 'active' : '' }}">
+                    <x-icon name="chat" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Inquiries</span>
+                </a>
+                <a href="/profile" class="sidebar-link {{ request()->is('profile*') ? 'active' : '' }}">
+                    <x-icon name="user" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>My Account</span>
                 </a>
             @endif
 
@@ -56,13 +92,25 @@
                     <x-icon name="chart" class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Dashboard</span>
                 </a>
-                <a href="/showroom" class="sidebar-link {{ request()->is('showroom*') ? 'active' : '' }}">
-                    <x-icon name="grid"  class="w-5 h-5 shrink-0" />
-                    <span x-show="sidebarOpen" x-transition>ShowRoom</span>
+                <a href="/staff/work-orders" class="sidebar-link relative {{ request()->is('staff/work-orders*') ? 'active' : '' }}">
+                    <x-icon name="bolt" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Work Orders</span>
+                    @if($unreadMessagesCount > 0)
+                        <span x-show="sidebarOpen" x-transition
+                              class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $unreadMessagesCount }}</span>
+                        <span x-show="!sidebarOpen"
+                              class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $unreadMessagesCount }}</span>
+                    @endif
                 </a>
-                <a href="/staff/customers" class="sidebar-link {{ request()->is('staff/customers*') ? 'active' : '' }}">
-                    <x-icon name="users" class="w-5 h-5 shrink-0" />
-                    <span x-show="sidebarOpen" x-transition>Customers</span>
+                <a href="/staff/agreements" class="sidebar-link relative {{ request()->is('staff/agreements*') ? 'active' : '' }}">
+                    <x-icon name="document" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Agreements</span>
+                    @if($pendingValidationCount > 0)
+                        <span x-show="sidebarOpen" x-transition
+                              class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $pendingValidationCount }}</span>
+                        <span x-show="!sidebarOpen"
+                              class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $pendingValidationCount }}</span>
+                    @endif
                 </a>
                 <a href="/staff/inquiries" class="sidebar-link relative {{ request()->is('staff/inquiries*') ? 'active' : '' }}">
                     <x-icon name="inbox" class="w-5 h-5 shrink-0" />
@@ -76,23 +124,49 @@
                               class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $newInquiriesCount }}</span>
                     @endif
                 </a>
+                <a href="/staff/invoices" class="sidebar-link {{ request()->is('staff/invoices*') ? 'active' : '' }}">
+                    <x-icon name="document" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Invoices</span>
+                </a>
+                <a href="/showroom" class="sidebar-link {{ request()->is('showroom*') ? 'active' : '' }}">
+                    <x-icon name="grid"  class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>ShowRoom</span>
+                </a>
+                {{-- Admin sees Prospects here; staff (no Admin section) keep Customers here --}}
+                @if(auth()->user()->isAdmin())
+                <a href="/admin/prospects" class="sidebar-link {{ request()->is('admin/prospects*') ? 'active' : '' }}">
+                    <x-icon name="map-pin" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Prospects</span>
+                </a>
+                @else
+                <a href="/staff/customers" class="sidebar-link {{ request()->is('staff/customers*') ? 'active' : '' }}">
+                    <x-icon name="users" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Customers</span>
+                </a>
+                @endif
             @endif
 
             @if(auth()->user()->isAdmin())
                 <div class="pt-2 pb-1">
                     <p x-show="sidebarOpen" class="label px-2">Admin</p>
                 </div>
-                <a href="/admin/prospects" class="sidebar-link {{ request()->is('admin/prospects*') ? 'active' : '' }}">
-                    <x-icon name="map-pin" class="w-5 h-5 shrink-0" />
-                    <span x-show="sidebarOpen" x-transition>Prospects</span>
+                <a href="/staff/customers" class="sidebar-link {{ request()->is('staff/customers*') ? 'active' : '' }}">
+                    <x-icon name="users" class="w-5 h-5 shrink-0" />
+                    <span x-show="sidebarOpen" x-transition>Customers</span>
                 </a>
                 <a href="/admin/users" class="sidebar-link {{ request()->is('admin/users*') ? 'active' : '' }}">
                     <x-icon name="cog"  class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Users</span>
                 </a>
-                <a href="/admin/showcase" class="sidebar-link {{ request()->is('admin/showcase*') ? 'active' : '' }}">
+                <a href="/admin/showcase" class="sidebar-link relative {{ request()->is('admin/showcase*') ? 'active' : '' }}">
                     <x-icon name="computer" class="w-5 h-5 shrink-0" />
                     <span x-show="sidebarOpen" x-transition>Showcase</span>
+                    @if($pendingAccessCount > 0)
+                        <span x-show="sidebarOpen" x-transition
+                              class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[11px] font-bold flex items-center justify-center">{{ $pendingAccessCount }}</span>
+                        <span x-show="!sidebarOpen"
+                              class="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-[var(--color-primary)] text-[var(--color-bg)] text-[10px] font-bold flex items-center justify-center">{{ $pendingAccessCount }}</span>
+                    @endif
                 </a>
                 <a href="/admin/content" class="sidebar-link {{ request()->is('admin/content*') ? 'active' : '' }}">
                     <x-icon name="document" class="w-5 h-5 shrink-0" />
@@ -132,13 +206,44 @@
                 <p class="text-xs text-[var(--color-muted)]">@yield('breadcrumb')</p>
                 @endif
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-medium text-[var(--color-text)]">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-[var(--color-muted)]">{{ auth()->user()->email }}</p>
-                </div>
-                <div class="h-9 w-9 rounded-full bg-[var(--color-primary-glow)] border border-[var(--color-primary)] flex items-center justify-center">
-                    <span class="text-sm font-semibold text-[var(--color-primary)]">{{ substr(auth()->user()->name, 0, 1) }}</span>
+            <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+                <button type="button" @click="open = !open" @click.outside="open = false"
+                        aria-haspopup="true" :aria-expanded="open"
+                        class="flex items-center gap-3 rounded-full py-1 pl-3 pr-1.5 transition-colors hover:bg-[var(--color-surface-2)]"
+                        :class="open ? 'bg-[var(--color-surface-2)]' : ''">
+                    <div class="text-right hidden sm:block leading-tight">
+                        <p class="text-sm font-medium text-[var(--color-text)]">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-[var(--color-muted)]">{{ auth()->user()->email }}</p>
+                    </div>
+                    <div class="h-9 w-9 rounded-full bg-[var(--color-primary-glow)] border border-[var(--color-primary)] flex items-center justify-center shrink-0">
+                        <span class="text-sm font-semibold text-[var(--color-primary)]">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                    </div>
+                    <span class="transition-transform duration-200" :class="open ? 'rotate-180' : ''">
+                        <x-icon name="chevron-down" class="w-4 h-4 text-[var(--color-muted)]" />
+                    </span>
+                </button>
+
+                {{-- Account menu --}}
+                <div x-show="open" x-cloak
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute right-0 mt-2 w-52 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl shadow-black/40 overflow-hidden z-50 py-1"
+                     style="transform-origin: top right;">
+                    <a href="{{ route('profile.edit') }}"
+                       class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors">
+                        <x-icon name="user" class="w-4 h-4 text-[var(--color-muted)]" /> My Account
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                                class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors">
+                            <x-icon name="logout" class="w-4 h-4 text-[var(--color-muted)]" /> Log out
+                        </button>
+                    </form>
                 </div>
             </div>
         </header>

@@ -167,6 +167,16 @@
                             </div>
                             <div><label class="label">Description</label><textarea name="description" rows="2" class="input resize-none mb-3">{{ old('description', $item->description) }}</textarea></div>
 
+                            {{-- Demo login — revealed to a customer once their access is approved --}}
+                            <div class="mb-3 p-3 rounded-lg border border-border bg-surface-2/40">
+                                <label class="label">Demo Login <span class="text-muted font-normal">(shown to approved customers alongside the Private URL)</span></label>
+                                <div class="grid sm:grid-cols-2 gap-3">
+                                    <input type="text" name="demo_username" value="{{ old('demo_username', $item->demo_username) }}" class="input" placeholder="Username / email">
+                                    <input type="text" name="demo_password" value="{{ old('demo_password', $item->demo_password) }}" class="input" placeholder="Password">
+                                </div>
+                                <textarea name="access_notes" rows="2" class="input resize-none mt-2" placeholder="Optional instructions shown with the login">{{ old('access_notes', $item->access_notes) }}</textarea>
+                            </div>
+
                             {{-- Thumbnail --}}
                             <div class="mb-3" x-data="{ removing: false }">
                                 <label class="label">Preview Image</label>
@@ -238,19 +248,89 @@
         @if($items->isEmpty())
         <p class="text-[var(--color-muted)] text-sm">Add showcase items first.</p>
         @else
+
+        {{-- How it works --}}
+        <div class="card mb-5 border border-dashed border-[var(--color-border)] bg-surface-2/30">
+            <p class="font-semibold text-[var(--color-text)] mb-3 flex items-center gap-2">
+                <x-icon name="info" class="w-4 h-4 text-primary" /> How demo access works
+            </p>
+            <div class="grid sm:grid-cols-3 gap-3 text-xs text-[var(--color-muted)]">
+                <div class="flex gap-2">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center">1</span>
+                    <span>A customer opens the <strong class="text-[var(--color-text)]">ShowRoom</strong> and taps <strong class="text-[var(--color-text)]">Request Access</strong> on a demo.</span>
+                </div>
+                <div class="flex gap-2">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center">2</span>
+                    <span>It shows here as <strong class="text-amber-400">Pending</strong> (and you're emailed). Click <strong class="text-[var(--color-text)]">Approve</strong> — or grant access directly anytime.</span>
+                </div>
+                <div class="flex gap-2">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center">3</span>
+                    <span>The customer is notified and gets a <strong class="text-[var(--color-text)]">Launch</strong> button plus the demo login on their card.</span>
+                </div>
+            </div>
+        </div>
+
         <div class="space-y-4">
             @foreach($items as $item)
-            <div class="card">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-[var(--color-text)]">{{ $item->title }}</h3>
-                    <span class="badge badge-muted">{{ $item->customers->count() }} customers</span>
+            @php
+                $pending  = $item->customers->filter(fn($c) => ($c->pivot->status ?? 'approved') === 'pending');
+                $approved = $item->customers->filter(fn($c) => ($c->pivot->status ?? 'approved') === 'approved');
+            @endphp
+            <div class="card {{ $pending->isNotEmpty() ? 'border border-amber-500/40' : '' }}">
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-2 shrink-0 flex items-center justify-center border border-border">
+                            @if($item->thumbnail_path)
+                            <img src="{{ Storage::url($item->thumbnail_path) }}" alt="" class="w-full h-full object-cover">
+                            @else
+                            <x-icon name="computer" class="w-5 h-5 text-[var(--color-border)]" />
+                            @endif
+                        </div>
+                        <h3 class="font-semibold text-[var(--color-text)] truncate">{{ $item->title }}</h3>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        @if($pending->isNotEmpty())
+                        <span class="badge badge-amber">{{ $pending->count() }} pending</span>
+                        @endif
+                        <span class="badge badge-muted">{{ $approved->count() }} with access</span>
+                    </div>
                 </div>
 
-                {{-- Grant access form --}}
+                {{-- Pending access requests --}}
+                @if($pending->isNotEmpty())
+                <div class="mb-4">
+                    <p class="label text-amber-400 mb-1.5 flex items-center gap-1"><x-icon name="warning" class="w-3.5 h-3.5" /> Awaiting your approval</p>
+                    <div class="space-y-1.5">
+                        @foreach($pending as $customer)
+                        <div class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 bg-amber-500/10 border border-amber-500/30">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-[var(--color-text)] truncate">{{ $customer->name }}</p>
+                                <p class="text-xs text-[var(--color-muted)] truncate">{{ $customer->email }} · requested {{ $customer->pivot->requested_at?->diffForHumans() }}</p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <form method="POST" action="/admin/showcase/{{ $item->id }}/approve/{{ $customer->id }}">
+                                    @csrf
+                                    <button type="submit" class="btn-primary btn-sm gap-1"><x-icon name="check" class="w-3.5 h-3.5" /> Approve</button>
+                                </form>
+                                <form method="POST" action="/admin/showcase/{{ $item->id }}/revoke/{{ $customer->id }}"
+                                      x-data="confirmDelete('Deny {{ addslashes($customer->name) }}\'s request?')">
+                                    @csrf @method('DELETE')
+                                    <button @click.prevent="confirm($el.closest('form'))" class="btn-ghost btn-sm text-[var(--color-danger)]">Deny</button>
+                                </form>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- Grant access directly --}}
+                <p class="label mb-1.5">Grant access directly</p>
                 <form method="POST" class="flex gap-2 mb-4" id="grant-{{ $item->id }}">
                     @csrf
                     <select name="user_id" class="select flex-1">
-                        <option value="">— Select customer —</option>
+                        <option value="">— Select a customer —</option>
                         @foreach($customers as $customer)
                         <option value="{{ $customer->id }}">{{ $customer->name }} ({{ $customer->email }})</option>
                         @endforeach
@@ -268,18 +348,20 @@
                     </button>
                 </form>
 
-                {{-- Current access list --}}
-                @if($item->customers->isNotEmpty())
+                {{-- Approved access list --}}
+                <p class="label mb-1.5">Customers with access</p>
+                @if($approved->isNotEmpty())
                 <div class="space-y-1.5">
-                    @foreach($item->customers as $customer)
+                    @foreach($approved as $customer)
                     <div class="flex items-center justify-between bg-surface-2 rounded-lg px-3 py-2">
-                        <div>
-                            <p class="text-sm font-medium text-[var(--color-text)]">{{ $customer->name }}</p>
-                            <p class="text-xs text-[var(--color-muted)]">{{ $customer->email }}</p>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-[var(--color-text)] truncate">{{ $customer->name }}</p>
+                            <p class="text-xs text-[var(--color-muted)] truncate">{{ $customer->email }}</p>
                         </div>
-                        <form method="POST" action="/admin/showcase/{{ $item->id }}/revoke/{{ $customer->id }}">
+                        <form method="POST" action="/admin/showcase/{{ $item->id }}/revoke/{{ $customer->id }}"
+                              x-data="confirmDelete('Remove {{ addslashes($customer->name) }}\'s access?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="text-xs text-[var(--color-danger)] hover:underline">Revoke</button>
+                            <button @click.prevent="confirm($el.closest('form'))" class="text-xs text-[var(--color-danger)] hover:underline shrink-0">Revoke</button>
                         </form>
                     </div>
                     @endforeach
@@ -303,7 +385,15 @@
                     <div><label class="label">Title</label><input type="text" name="title" class="input" required></div>
                     <div>
                         <label class="label">Private URL <span class="text-muted font-normal">(logged-in users only)</span></label>
-                        <input type="url" name="private_url" class="input" placeholder="https://full-demo.example.com">
+                        <input type="url" name="private_url" value="{{ old('private_url') }}" class="input" placeholder="https://full-demo.example.com">
+                    </div>
+                    <div class="p-3 rounded-lg border border-border bg-surface-2/40">
+                        <label class="label">Demo Login <span class="text-muted font-normal">(shown to approved customers)</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" name="demo_username" value="{{ old('demo_username') }}" class="input" placeholder="Username / email">
+                            <input type="text" name="demo_password" value="{{ old('demo_password') }}" class="input" placeholder="Password">
+                        </div>
+                        <textarea name="access_notes" rows="2" class="input resize-none mt-2" placeholder="Optional access instructions">{{ old('access_notes') }}</textarea>
                     </div>
                     <div><label class="label">Description</label><textarea name="description" rows="3" class="input resize-none"></textarea></div>
                     <div class="grid grid-cols-2 gap-3">

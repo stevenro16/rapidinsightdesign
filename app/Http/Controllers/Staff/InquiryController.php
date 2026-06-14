@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
+use App\Mail\InquiryReply;
 use App\Models\Inquiry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class InquiryController extends Controller
@@ -27,7 +30,8 @@ class InquiryController extends Controller
 
     public function show(Inquiry $inquiry): View
     {
-        $inquiry->load('user');
+        $inquiry->load(['user', 'notes.author']);
+
         return view('staff.inquiries.show', compact('inquiry'));
     }
 
@@ -40,5 +44,31 @@ class InquiryController extends Controller
         $inquiry->update(['status' => $request->status]);
 
         return back()->with('success', 'Inquiry status updated.');
+    }
+
+    public function storeNote(Request $request, Inquiry $inquiry): RedirectResponse
+    {
+        $data = $request->validate([
+            'body'                => ['required', 'string', 'max:5000'],
+            'visible_to_customer' => ['nullable', 'boolean'],
+        ]);
+
+        $visible = $request->boolean('visible_to_customer');
+        $inquiry->notes()->create([
+            'author_id'           => auth()->id(),
+            'body'                => $data['body'],
+            'visible_to_customer' => $visible,
+        ]);
+
+        // Notify the customer when a reply is shared with them (and an account is linked).
+        if ($visible && $inquiry->user) {
+            try {
+                Mail::to($inquiry->user->email)->send(new InquiryReply($inquiry, $data['body'], toCustomer: true));
+            } catch (\Throwable $e) {
+                Log::error('Inquiry reply email failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', $visible ? 'Reply sent to the customer.' : 'Internal note added.');
     }
 }
