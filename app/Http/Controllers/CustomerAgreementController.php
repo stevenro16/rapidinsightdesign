@@ -34,7 +34,10 @@ class CustomerAgreementController extends Controller
     public function sign(Request $request, Agreement $agreement): RedirectResponse
     {
         $this->guard($agreement);
-        abort_unless($agreement->canCustomerSign(), 422);
+        if (! $agreement->canCustomerSign()) {
+            return redirect()->route('agreements.show', $agreement)
+                ->with('success', 'This agreement has already been signed.');
+        }
 
         $data = $request->validate([
             'agreed'           => ['accepted'],
@@ -63,7 +66,17 @@ class CustomerAgreementController extends Controller
     public function payment(Request $request, Agreement $agreement): RedirectResponse
     {
         $this->guard($agreement);
-        abort_unless($agreement->canCustomerSign(), 422);
+        // Payments here are part of the review/sign step. If the agreement has already
+        // advanced (e.g. a double-clicked "Record payment" that already submitted it),
+        // fail gracefully instead of throwing a 422 error page.
+        if (! $agreement->canCustomerSign()) {
+            if ($agreement->status === 'pending_validation') {
+                return redirect()->route('agreements.show', $agreement)
+                    ->with('success', 'Thanks — your payment was recorded and your agreement is submitted for review.');
+            }
+            return redirect()->route('agreements.show', $agreement)
+                ->with('error', 'This agreement is no longer accepting payments here.');
+        }
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],

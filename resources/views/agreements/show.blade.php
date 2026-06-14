@@ -169,7 +169,8 @@
         @if($canSign && $agreement->balance() > 0)
         <form method="POST" action="{{ route('agreements.payment.store', $agreement) }}"
               class="mt-3 flex flex-wrap items-end gap-2"
-              x-data="{ amt: '{{ number_format($agreement->deposit_amount, 2, '.', '') }}' }">
+              x-data="{ amt: '{{ number_format($agreement->deposit_amount, 2, '.', '') }}', submitting: false }"
+              @submit="submitting = true">
             @csrf
             <div>
                 <label class="label">Amount ($)</label>
@@ -184,7 +185,9 @@
                     <option value="full">Pay in full</option>
                 </select>
             </div>
-            <button class="btn-ghost btn-sm">Record payment</button>
+            <button class="btn-ghost btn-sm" :disabled="submitting" :class="submitting ? 'opacity-50 cursor-not-allowed' : ''">
+                <span x-text="submitting ? 'Recording…' : 'Record payment'"></span>
+            </button>
         </form>
         @endif
     </div>
