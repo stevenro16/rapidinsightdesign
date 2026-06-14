@@ -37,7 +37,7 @@
             {{-- Auth area --}}
             <div class="flex items-center gap-3">
                 @auth
-                    <a href="{{ auth()->user()->isCustomer() ? '/showroom' : (auth()->user()->isStaff() ? '/staff/dashboard' : '/admin/dashboard') }}"
+                    <a href="{{ auth()->user()->isCustomer() ? '/dashboard' : (auth()->user()->isStaff() ? '/staff/dashboard' : '/admin/dashboard') }}"
                        class="btn-ghost btn-sm">
                         <x-icon name="user" class="w-4 h-4" />
                         {{ auth()->user()->name }}

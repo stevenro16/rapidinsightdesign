@@ -61,7 +61,9 @@ class RegisterController extends Controller
         $request->session()->regenerate();
         $user->forceFill(['last_login_at' => now()])->saveQuietly();
 
-        return redirect()->intended('/dashboard')
+        // New registrations are always customers — send them straight to their dashboard.
+        // (Not intended() — a stale intended URL like /admin/dashboard would 403 them.)
+        return redirect('/dashboard')
             ->with('success', "Welcome aboard, {$user->name}! Your account is ready.");
     }
 }

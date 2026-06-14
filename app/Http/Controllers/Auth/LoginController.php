@@ -33,10 +33,12 @@ class LoginController extends Controller
             $request->session()->regenerate();
             Auth::user()->forceFill(['last_login_at' => now()])->saveQuietly();
 
+            // Always land on the role's own portal home. (Avoid intended() — a stale
+            // cross-role intended URL, e.g. /admin/dashboard, would 403 the wrong role.)
             return match(Auth::user()->role) {
-                'admin' => redirect()->intended('/admin/dashboard'),
-                'staff' => redirect()->intended('/staff/dashboard'),
-                default => redirect()->intended('/dashboard'),
+                'admin' => redirect('/admin/dashboard'),
+                'staff' => redirect('/staff/dashboard'),
+                default => redirect('/dashboard'),
             };
         }
 
